@@ -1,0 +1,424 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { ClipboardList, Printer, Calendar, Filter } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { supabase } from '@/integrations/supabase/client';
+import { Attendance, AttendanceStatus, Class } from '@/types/database';
+import { UserProfile } from '@/types/auth';
+
+interface AttendanceWithProfile extends Attendance {
+  profile?: UserProfile;
+}
+
+const statusColors: Record<AttendanceStatus, string> = {
+  hadir: 'bg-green-100 text-green-800 border-green-200',
+  izin: 'bg-blue-100 text-blue-800 border-blue-200',
+  sakit: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  alpha: 'bg-red-100 text-red-800 border-red-200',
+};
+
+const statusLabels: Record<AttendanceStatus, string> = {
+  hadir: 'H',
+  izin: 'I',
+  sakit: 'S',
+  alpha: 'A',
+};
+
+const Kehadiran: React.FC = () => {
+  const { authUser, user } = useAuth();
+  const [attendanceData, setAttendanceData] = useState<AttendanceWithProfile[]>([]);
+  const [myAttendance, setMyAttendance] = useState<Attendance[]>([]);
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [selectedClass, setSelectedClass] = useState('all');
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth().toString());
+  const [loading, setLoading] = useState(true);
+  const printRef = useRef<HTMLDivElement>(null);
+
+  const isGuru = authUser?.role === 'guru';
+
+  const months = [
+    { value: '0', label: 'Januari' },
+    { value: '1', label: 'Februari' },
+    { value: '2', label: 'Maret' },
+    { value: '3', label: 'April' },
+    { value: '4', label: 'Mei' },
+    { value: '5', label: 'Juni' },
+    { value: '6', label: 'Juli' },
+    { value: '7', label: 'Agustus' },
+    { value: '8', label: 'September' },
+    { value: '9', label: 'Oktober' },
+    { value: '10', label: 'November' },
+    { value: '11', label: 'Desember' },
+  ];
+
+  useEffect(() => {
+    fetchData();
+  }, [user, selectedMonth]);
+
+  const fetchData = async () => {
+    if (!user) return;
+    setLoading(true);
+
+    // Fetch classes
+    const { data: classesData } = await supabase.from('classes').select('*').order('name');
+    if (classesData) setClasses(classesData);
+
+    // Calculate date range for selected month
+    const year = new Date().getFullYear();
+    const month = parseInt(selectedMonth);
+    const startDate = new Date(year, month, 1).toISOString().split('T')[0];
+    const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0];
+
+    // Fetch my attendance
+    const { data: myData } = await supabase
+      .from('attendance')
+      .select('*')
+      .eq('user_id', user.id)
+      .gte('date', startDate)
+      .lte('date', endDate)
+      .order('date', { ascending: false });
+
+    if (myData) setMyAttendance(myData);
+
+    // For teachers, fetch all attendance
+    if (isGuru) {
+      const { data: allData } = await supabase
+        .from('attendance')
+        .select('*')
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .order('date', { ascending: false });
+
+      if (allData) {
+        // Fetch profiles for all users
+        const userIds = [...new Set(allData.map((a) => a.user_id))];
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('*')
+          .in('user_id', userIds);
+
+        const attendanceWithProfiles = allData.map((attendance) => ({
+          ...attendance,
+          profile: profiles?.find((p) => p.user_id === attendance.user_id),
+        }));
+
+        setAttendanceData(attendanceWithProfiles);
+      }
+    }
+
+    setLoading(false);
+  };
+
+  const filteredAttendance = attendanceData.filter((attendance) => {
+    if (selectedClass === 'all') return true;
+    return attendance.profile?.class === selectedClass;
+  });
+
+  const handlePrint = () => {
+    const printContent = printRef.current;
+    if (printContent) {
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Rekap Kehadiran - FADAM School</title>
+              <style>
+                body { font-family: Arial, sans-serif; padding: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+                th { background-color: #3b82f6; color: white; }
+                tr:nth-child(even) { background-color: #f9fafb; }
+                h1 { text-align: center; color: #1e40af; }
+                .header { text-align: center; margin-bottom: 20px; }
+                .status-h { background-color: #dcfce7; color: #166534; }
+                .status-i { background-color: #dbeafe; color: #1e40af; }
+                .status-s { background-color: #fef3c7; color: #92400e; }
+                .status-a { background-color: #fee2e2; color: #991b1b; }
+              </style>
+            </head>
+            <body>
+              <div class="header">
+                <h1>ABSENSI FADAM SCHOOL</h1>
+                <h2>Rekap Kehadiran ${months.find(m => m.value === selectedMonth)?.label} ${new Date().getFullYear()}</h2>
+              </div>
+              ${printContent.innerHTML}
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+      }
+    }
+  };
+
+  const renderStatusBadge = (status: AttendanceStatus) => (
+    <Badge variant="outline" className={statusColors[status]}>
+      {statusLabels[status]}
+    </Badge>
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Rekap Kehadiran</h1>
+          <p className="text-muted-foreground">
+            {isGuru ? 'Lihat rekap kehadiran siswa dan guru' : 'Lihat riwayat kehadiran Anda'}
+          </p>
+        </div>
+        <Button variant="outline" onClick={handlePrint}>
+          <Printer className="mr-2 h-4 w-4" />
+          Cetak
+        </Button>
+      </div>
+
+      {isGuru ? (
+        <Tabs defaultValue="students" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="students">Kehadiran Siswa</TabsTrigger>
+            <TabsTrigger value="personal">Kehadiran Saya</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="students" className="space-y-4">
+            {/* Filters */}
+            <Card className="shadow-card border-0">
+              <CardContent className="pt-6">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex items-center gap-2 flex-1">
+                    <Filter className="h-4 w-4 text-muted-foreground" />
+                    <Select value={selectedClass} onValueChange={setSelectedClass}>
+                      <SelectTrigger className="w-full sm:w-[200px]">
+                        <SelectValue placeholder="Semua Kelas" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Semua Kelas</SelectItem>
+                        {classes.map((cls) => (
+                          <SelectItem key={cls.id} value={cls.name}>
+                            {cls.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                      <SelectTrigger className="w-full sm:w-[150px]">
+                        <SelectValue placeholder="Pilih Bulan" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {months.map((month) => (
+                          <SelectItem key={month.value} value={month.value}>
+                            {month.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Students Attendance Table */}
+            <Card className="shadow-card border-0">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ClipboardList className="h-5 w-5 text-primary" />
+                  Tabel Kehadiran Siswa
+                </CardTitle>
+                <CardDescription>
+                  H = Hadir, I = Izin, S = Sakit, A = Alpha
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div ref={printRef} className="overflow-x-auto">
+                  {loading ? (
+                    <div className="text-center py-8 text-muted-foreground">Memuat data...</div>
+                  ) : filteredAttendance.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <ClipboardList className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>Belum ada data kehadiran</p>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-primary/10">
+                          <TableHead className="w-12 text-center">No</TableHead>
+                          <TableHead>Nama</TableHead>
+                          <TableHead className="w-24 text-center">Kelas</TableHead>
+                          <TableHead className="w-28 text-center">Tanggal</TableHead>
+                          <TableHead className="w-20 text-center">Status</TableHead>
+                          <TableHead className="w-24 text-center">Jam</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredAttendance.map((attendance, index) => (
+                          <TableRow key={attendance.id}>
+                            <TableCell className="text-center">{index + 1}</TableCell>
+                            <TableCell className="font-medium">
+                              {attendance.profile?.full_name || 'Unknown'}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {attendance.profile?.class || '-'}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {new Date(attendance.date).toLocaleDateString('id-ID', {
+                                day: 'numeric',
+                                month: 'short',
+                              })}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {renderStatusBadge(attendance.status)}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {attendance.check_in_time?.slice(0, 5) || '-'}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="personal">
+            <Card className="shadow-card border-0">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ClipboardList className="h-5 w-5 text-primary" />
+                  Kehadiran Saya
+                </CardTitle>
+                <CardDescription>Riwayat kehadiran Anda bulan ini</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {myAttendance.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <ClipboardList className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Belum ada data kehadiran</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-primary/10">
+                        <TableHead className="w-12 text-center">No</TableHead>
+                        <TableHead>Tanggal</TableHead>
+                        <TableHead className="text-center">Status</TableHead>
+                        <TableHead className="text-center">Jam Masuk</TableHead>
+                        <TableHead>Keterangan</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {myAttendance.map((attendance, index) => (
+                        <TableRow key={attendance.id}>
+                          <TableCell className="text-center">{index + 1}</TableCell>
+                          <TableCell>
+                            {new Date(attendance.date).toLocaleDateString('id-ID', {
+                              weekday: 'long',
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
+                            })}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {renderStatusBadge(attendance.status)}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {attendance.check_in_time?.slice(0, 5) || '-'}
+                          </TableCell>
+                          <TableCell>{attendance.notes || '-'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      ) : (
+        // Student view - only show personal attendance
+        <Card className="shadow-card border-0">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <ClipboardList className="h-5 w-5 text-primary" />
+                  Riwayat Kehadiran
+                </CardTitle>
+                <CardDescription>H = Hadir, I = Izin, S = Sakit, A = Alpha</CardDescription>
+              </div>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Pilih Bulan" />
+                </SelectTrigger>
+                <SelectContent>
+                  {months.map((month) => (
+                    <SelectItem key={month.value} value={month.value}>
+                      {month.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div ref={printRef}>
+              {loading ? (
+                <div className="text-center py-8 text-muted-foreground">Memuat data...</div>
+              ) : myAttendance.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <ClipboardList className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Belum ada data kehadiran bulan ini</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-primary/10">
+                      <TableHead className="w-12 text-center">No</TableHead>
+                      <TableHead>Tanggal</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-center">Jam Masuk</TableHead>
+                      <TableHead>Keterangan</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {myAttendance.map((attendance, index) => (
+                      <TableRow key={attendance.id}>
+                        <TableCell className="text-center">{index + 1}</TableCell>
+                        <TableCell>
+                          {new Date(attendance.date).toLocaleDateString('id-ID', {
+                            weekday: 'long',
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                          })}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {renderStatusBadge(attendance.status)}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {attendance.check_in_time?.slice(0, 5) || '-'}
+                        </TableCell>
+                        <TableCell>{attendance.notes || '-'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default Kehadiran;
