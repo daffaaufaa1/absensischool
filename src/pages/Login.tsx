@@ -6,15 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-
-type LoginRole = 'guru' | 'siswa';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<LoginRole>('siswa');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
@@ -30,10 +26,17 @@ const Login: React.FC = () => {
 
     setLoading(true);
 
-    // Convert username to email format for Supabase auth
-    const email = `${username.trim()}@${role}.fadam.sch.id`;
+    // Try siswa first, then guru
+    const siswaEmail = `${username.trim()}@siswa.fadam.sch.id`;
+    const guruEmail = `${username.trim()}@guru.fadam.sch.id`;
 
-    const { error } = await signIn(email, password);
+    let { error } = await signIn(siswaEmail, password);
+    
+    // If siswa login failed, try guru
+    if (error) {
+      const guruResult = await signIn(guruEmail, password);
+      error = guruResult.error;
+    }
 
     if (error) {
       toast.error('Login gagal: Username atau password salah');
@@ -71,19 +74,6 @@ const Login: React.FC = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="role">Masuk Sebagai</Label>
-              <Select value={role} onValueChange={(value: LoginRole) => setRole(value)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Pilih peran" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="siswa">👨‍🎓 Siswa</SelectItem>
-                  <SelectItem value="guru">👨‍🏫 Guru</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -92,7 +82,7 @@ const Login: React.FC = () => {
                   type="text"
                   placeholder="Masukkan username"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                   className="pl-10"
                   required
                 />
