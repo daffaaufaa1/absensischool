@@ -6,11 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
+type LoginRole = 'guru' | 'siswa';
+
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<LoginRole>('siswa');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
@@ -18,12 +22,21 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!username.trim()) {
+      toast.error('Username tidak boleh kosong');
+      return;
+    }
+
     setLoading(true);
+
+    // Convert username to email format for Supabase auth
+    const email = `${username.trim()}@${role}.fadam.sch.id`;
 
     const { error } = await signIn(email, password);
 
     if (error) {
-      toast.error('Login gagal: ' + error.message);
+      toast.error('Login gagal: Username atau password salah');
     } else {
       toast.success('Login berhasil!');
       navigate('/dashboard');
@@ -58,22 +71,32 @@ const Login: React.FC = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="role">Masuk Sebagai</Label>
+              <Select value={role} onValueChange={(value: LoginRole) => setRole(value)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Pilih peran" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="siswa">👨‍🎓 Siswa</SelectItem>
+                  <SelectItem value="guru">👨‍🏫 Guru</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="contoh@guru atau contoh@siswa"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="username"
+                  type="text"
+                  placeholder="Masukkan username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="pl-10"
                   required
                 />
               </div>
-              <p className="text-xs text-muted-foreground">
-                Gunakan format: username@guru atau username@siswa
-              </p>
             </div>
 
             <div className="space-y-2">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff, GraduationCap, User, Mail } from 'lucide-react';
+import { Eye, EyeOff, GraduationCap, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ import { UserRole } from '@/types/auth';
 import { Class } from '@/types/database';
 
 const Register: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -33,15 +33,19 @@ const Register: React.FC = () => {
     fetchClasses();
   }, []);
 
-  const validateEmail = (email: string) => {
-    const isGuru = email.endsWith('@guru');
-    const isSiswa = email.endsWith('@siswa');
-    return { isGuru, isSiswa, isValid: isGuru || isSiswa };
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!username.trim()) {
+      toast.error('Username tidak boleh kosong');
+      return;
+    }
+
+    if (username.includes('@') || username.includes(' ')) {
+      toast.error('Username tidak boleh mengandung @ atau spasi');
+      return;
+    }
+
     if (password !== confirmPassword) {
       toast.error('Password tidak cocok');
       return;
@@ -51,45 +55,38 @@ const Register: React.FC = () => {
       toast.error('Password minimal 6 karakter');
       return;
     }
-
-    const { isGuru, isSiswa, isValid } = validateEmail(email);
-    if (!isValid) {
-      toast.error('Email harus berakhiran @guru atau @siswa');
-      return;
-    }
-
-    // Auto-detect role from email
-    const detectedRole: UserRole = isGuru ? 'guru' : 'siswa';
     
-    if (detectedRole === 'siswa' && !selectedClass) {
+    if (role === 'siswa' && !selectedClass) {
       toast.error('Siswa harus memilih kelas');
       return;
     }
 
     setLoading(true);
 
-    // Convert email for actual registration (add .com for valid email format)
-    const actualEmail = email + '.fadam.sch.id';
+    // Convert username to email format for Supabase auth
+    const email = `${username.trim()}@${role}.fadam.sch.id`;
     
     const { error } = await signUp(
-      actualEmail,
+      email,
       password,
       fullName,
-      detectedRole,
-      detectedRole === 'siswa' ? selectedClass : undefined
+      role,
+      role === 'siswa' ? selectedClass : undefined
     );
 
     if (error) {
-      toast.error('Registrasi gagal: ' + error.message);
+      if (error.message.includes('already registered')) {
+        toast.error('Username sudah terdaftar');
+      } else {
+        toast.error('Registrasi gagal: ' + error.message);
+      }
     } else {
-      toast.success('Registrasi berhasil! Silakan cek email untuk verifikasi.');
+      toast.success('Registrasi berhasil! Silakan login.');
       navigate('/login');
     }
 
     setLoading(false);
   };
-
-  const emailValidation = validateEmail(email);
 
   return (
     <div className="min-h-screen gradient-hero flex items-center justify-center p-4 relative overflow-hidden">
@@ -116,6 +113,19 @@ const Register: React.FC = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
+              <Label htmlFor="role">Daftar Sebagai</Label>
+              <Select value={role} onValueChange={(value: UserRole) => setRole(value)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Pilih peran" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="siswa">👨‍🎓 Siswa</SelectItem>
+                  <SelectItem value="guru">👨‍🏫 Guru</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="fullName">Nama Lengkap</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -132,34 +142,21 @@ const Register: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="text"
-                  placeholder="username@guru atau username@siswa"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
-                  required
-                />
-              </div>
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="Masukkan username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                required
+              />
               <p className="text-xs text-muted-foreground">
-                {email && emailValidation.isValid && (
-                  <span className="text-green-600">
-                    ✓ Terdaftar sebagai {emailValidation.isGuru ? 'Guru' : 'Siswa'}
-                  </span>
-                )}
-                {email && !emailValidation.isValid && (
-                  <span className="text-destructive">
-                    Format: username@guru atau username@siswa
-                  </span>
-                )}
+                Hanya huruf kecil, angka, dan underscore
               </p>
             </div>
 
-            {emailValidation.isSiswa && (
+            {role === 'siswa' && (
               <div className="space-y-2">
                 <Label htmlFor="class">Kelas</Label>
                 <Select value={selectedClass} onValueChange={setSelectedClass}>
