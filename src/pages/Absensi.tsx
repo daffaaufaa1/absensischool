@@ -27,21 +27,8 @@ const Absensi: React.FC = () => {
 
   const isGuru = authUser?.role === 'guru';
 
-  // Check if within attendance time
-  const isWithinAttendanceTime = () => {
-    const now = new Date();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    const time = hours * 60 + minutes;
-
-    if (isGuru) {
-      return time >= 410 && time <= 450; // 06:50 - 07:30
-    } else {
-      return time >= 420 && time <= 480; // 07:00 - 08:00
-    }
-  };
-
-  const canAttend = isWithinAttendanceTime();
+  // Allow attendance 24 hours (no time restriction for now)
+  const canAttend = true;
 
   // Get user location
   const getLocation = useCallback(() => {
