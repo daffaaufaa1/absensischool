@@ -35,15 +35,23 @@ const Absensi: React.FC = () => {
         video: { facingMode: 'user', width: 640, height: 480 },
       });
       setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-      }
       setStep('camera');
-    } catch (error) {
-      toast.error('Gagal mengakses kamera');
+    } catch (error: any) {
+      if (error.name === 'NotAllowedError') {
+        toast.error('Akses kamera ditolak. Silakan izinkan akses kamera di pengaturan browser.');
+      } else {
+        toast.error('Gagal mengakses kamera');
+      }
       console.error(error);
     }
   };
+
+  // Attach stream to video element when both are ready
+  useEffect(() => {
+    if (stream && videoRef.current && step === 'camera') {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream, step]);
 
   // Stop camera
   const stopCamera = () => {
