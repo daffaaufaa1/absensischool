@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff, GraduationCap, User } from 'lucide-react';
+import { Eye, EyeOff, User, Lock, Sparkles, ArrowRight, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 
 const Login: React.FC = () => {
@@ -49,87 +48,150 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen gradient-hero flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Decorative elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/5 rounded-full blur-3xl" />
+    <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
+      {/* Top curved gradient section */}
+      <div className="relative h-[45vh] min-h-[280px] flex flex-col items-center justify-center">
+        {/* Background gradient with curves */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-accent overflow-hidden">
+          {/* Decorative circles */}
+          <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-2xl" />
+          <div className="absolute top-20 -left-20 w-48 h-48 bg-white/10 rounded-full blur-2xl" />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[200%] h-32 bg-background rounded-t-[100%]" />
+        </div>
+        
+        {/* Logo and branding */}
+        <div className="relative z-10 flex flex-col items-center text-center px-4">
+          {/* Animated Logo */}
+          <div className="relative mb-4">
+            <div className="w-24 h-24 rounded-3xl bg-white/20 backdrop-blur-xl flex items-center justify-center shadow-2xl animate-float">
+              <div className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center">
+                <span className="text-4xl font-black text-primary">F</span>
+              </div>
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-emerald-400 flex items-center justify-center shadow-lg">
+              <Shield className="w-4 h-4 text-white" />
+            </div>
+          </div>
+          
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">
+            FADAM SCHOOL
+          </h1>
+          <p className="text-white/70 text-sm flex items-center gap-1.5">
+            <Sparkles className="w-4 h-4" />
+            Sistem Absensi Digital
+          </p>
+        </div>
       </div>
 
-      <Card className="w-full max-w-md shadow-elegant glass-effect border-0 relative z-10">
-        <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-20 h-20 rounded-2xl gradient-primary flex items-center justify-center shadow-elegant animate-float">
-            <GraduationCap className="w-10 h-10 text-white" />
+      {/* Form section */}
+      <div className="flex-1 flex flex-col px-6 pt-4 pb-8 -mt-8 relative z-20">
+        <div className="max-w-sm mx-auto w-full">
+          {/* Welcome text */}
+          <div className="text-center mb-6">
+            <h2 className="text-xl font-bold text-foreground">Selamat Datang!</h2>
+            <p className="text-muted-foreground text-sm mt-1">Masuk untuk melanjutkan</p>
           </div>
-          <div>
-            <CardTitle className="text-2xl font-bold text-gradient">
-              ABSENSI FADAM SCHOOL
-            </CardTitle>
-            <CardDescription className="text-muted-foreground mt-2">
-              Masuk ke akun Anda untuk melanjutkan
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Username field */}
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username" className="text-sm font-medium">Username</Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <User className="h-4 w-4 text-primary" />
+                  </div>
+                </div>
                 <Input
                   id="username"
                   type="text"
                   placeholder="Masukkan username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                  className="pl-10"
+                  className="pl-14 h-12 text-base rounded-xl border-2 border-border focus:border-primary transition-colors"
                   required
                 />
               </div>
             </div>
 
+            {/* Password field */}
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-sm font-medium">Password</Label>
               <div className="relative">
+                <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Lock className="h-4 w-4 text-primary" />
+                  </div>
+                </div>
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Masukkan password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pr-10"
+                  className="pl-14 pr-12 h-12 text-base rounded-xl border-2 border-border focus:border-primary transition-colors"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
 
+            {/* Submit button */}
             <Button
               type="submit"
-              className="w-full gradient-primary text-white shadow-elegant hover:opacity-90 transition-opacity"
+              className="w-full h-12 text-base font-semibold rounded-xl bg-gradient-to-r from-primary to-accent text-white shadow-lg hover:shadow-xl hover:opacity-95 transition-all duration-300 group"
               disabled={loading}
             >
-              {loading ? 'Memproses...' : 'Masuk'}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Memproses...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  Masuk
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </span>
+              )}
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              Belum punya akun?{' '}
-              <Link to="/register" className="text-primary hover:underline font-medium">
-                Daftar di sini
-              </Link>
-            </p>
+          {/* Divider */}
+          <div className="flex items-center gap-3 my-6">
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-xs text-muted-foreground">atau</span>
+            <div className="flex-1 h-px bg-border" />
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Register link */}
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground mb-3">
+              Belum punya akun?
+            </p>
+            <Link to="/register">
+              <Button
+                variant="outline"
+                className="w-full h-12 text-base font-medium rounded-xl border-2 hover:bg-primary/5 hover:border-primary transition-all duration-300"
+              >
+                Daftar Akun Baru
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-auto pt-6">
+          <p className="text-center text-xs text-muted-foreground">
+            © 2024 FADAM School. All rights reserved.
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
