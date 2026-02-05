@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FileSpreadsheet, Printer, Save, Search } from 'lucide-react';
+ import { FileSpreadsheet, Save, Search, Download } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -163,30 +163,35 @@ const InputNilai: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Input Nilai Siswa</h1>
+           <h1 className="text-2xl font-bold tracking-tight">Input Nilai Siswa</h1>
           <p className="text-muted-foreground">Masukkan nilai untuk setiap siswa</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handlePrint}>
-            <Printer className="mr-2 h-4 w-4" />
+             <Download className="mr-2 h-4 w-4" />
             Cetak
           </Button>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="gradient-primary text-white">
+               <Button>
                 <Save className="mr-2 h-4 w-4" />
                 Simpan Nilai
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Simpan Nilai</DialogTitle>
+                 <DialogTitle className="flex items-center gap-2">
+                   <div className="p-2 rounded-lg bg-primary/10">
+                     <Save className="h-4 w-4 text-primary" />
+                   </div>
+                   Simpan Nilai
+                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div className="space-y-2">
                   <Label>Mata Pelajaran</Label>
                   <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                    <SelectTrigger>
+                     <SelectTrigger className="rounded-xl">
                       <SelectValue placeholder="Pilih mata pelajaran" />
                     </SelectTrigger>
                     <SelectContent>
@@ -201,7 +206,7 @@ const InputNilai: React.FC = () => {
                 <div className="space-y-2">
                   <Label>Jenis Nilai</Label>
                   <Select value={selectedGradeType} onValueChange={(v) => setSelectedGradeType(v as GradeType)}>
-                    <SelectTrigger>
+                     <SelectTrigger className="rounded-xl">
                       <SelectValue placeholder="Pilih jenis nilai" />
                     </SelectTrigger>
                     <SelectContent>
@@ -213,11 +218,11 @@ const InputNilai: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex gap-2 pt-4">
+                 <div className="flex gap-3 pt-4">
                   <Button variant="outline" onClick={() => setDialogOpen(false)} className="flex-1">
                     Batal
                   </Button>
-                  <Button onClick={handleSaveGrades} className="flex-1 gradient-primary text-white">
+                   <Button onClick={handleSaveGrades} className="flex-1">
                     Simpan
                   </Button>
                 </div>
@@ -228,8 +233,8 @@ const InputNilai: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <Card className="shadow-card border-0">
-        <CardContent className="pt-6">
+       <Card className="shadow-card">
+         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
@@ -238,12 +243,12 @@ const InputNilai: React.FC = () => {
                   placeholder="Cari nama siswa atau kelas..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                   className="pl-10 rounded-xl"
                 />
               </div>
             </div>
             <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-              <SelectTrigger className="w-full sm:w-[200px]">
+               <SelectTrigger className="w-full sm:w-[200px] rounded-xl">
                 <SelectValue placeholder="Pilih Mapel" />
               </SelectTrigger>
               <SelectContent>
@@ -255,7 +260,7 @@ const InputNilai: React.FC = () => {
               </SelectContent>
             </Select>
             <Select value={selectedGradeType} onValueChange={(v) => setSelectedGradeType(v as GradeType)}>
-              <SelectTrigger className="w-full sm:w-[180px]">
+               <SelectTrigger className="w-full sm:w-[180px] rounded-xl">
                 <SelectValue placeholder="Jenis Nilai" />
               </SelectTrigger>
               <SelectContent>
@@ -271,10 +276,12 @@ const InputNilai: React.FC = () => {
       </Card>
 
       {/* Grade Table */}
-      <Card className="shadow-card border-0">
+       <Card className="shadow-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <FileSpreadsheet className="h-5 w-5 text-primary" />
+             <div className="p-2 rounded-lg bg-primary/10">
+               <FileSpreadsheet className="h-4 w-4 text-primary" />
+             </div>
             Tabel Nilai Siswa
           </CardTitle>
           <CardDescription>Klik pada sel untuk memasukkan nilai (0-100)</CardDescription>
@@ -283,19 +290,19 @@ const InputNilai: React.FC = () => {
           <div ref={printRef} className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-primary/10">
-                  <TableHead className="w-12 text-center">No</TableHead>
-                  <TableHead className="min-w-[200px]">Nama Siswa</TableHead>
-                  <TableHead className="w-32 text-center">Kelas</TableHead>
-                  <TableHead className="w-24 text-center">Nilai</TableHead>
+                 <TableRow className="hover:bg-transparent">
+                   <TableHead className="w-12 text-center font-semibold">No</TableHead>
+                   <TableHead className="min-w-[200px] font-semibold">Nama Siswa</TableHead>
+                   <TableHead className="w-32 text-center font-semibold">Kelas</TableHead>
+                   <TableHead className="w-24 text-center font-semibold">Nilai</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredStudents.map((student, index) => (
                   <TableRow key={student.id} className="hover:bg-muted/50">
-                    <TableCell className="text-center font-medium">{index + 1}</TableCell>
+                     <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
                     <TableCell className="font-medium">{student.name}</TableCell>
-                    <TableCell className="text-center">{student.class}</TableCell>
+                     <TableCell className="text-center text-muted-foreground">{student.class}</TableCell>
                     <TableCell className="text-center">
                       {editingCell?.studentId === student.id && editingCell?.field === 'grade' ? (
                         <Input
@@ -306,13 +313,13 @@ const InputNilai: React.FC = () => {
                           onChange={(e) => setTempValue(e.target.value)}
                           onBlur={handleCellBlur}
                           onKeyDown={handleKeyDown}
-                          className="w-20 mx-auto text-center"
+                           className="w-20 mx-auto text-center rounded-lg"
                           autoFocus
                         />
                       ) : (
                         <div
                           onClick={() => handleCellClick(student.id, 'grade', getGrade(student.id, 'grade'))}
-                          className="cursor-pointer hover:bg-primary/10 rounded px-2 py-1 min-h-[32px] flex items-center justify-center border border-transparent hover:border-primary/30 transition-colors"
+                           className="cursor-pointer hover:bg-muted rounded-lg px-2 py-1.5 min-h-[36px] flex items-center justify-center border border-transparent hover:border-border transition-colors"
                         >
                           {getGrade(student.id, 'grade') ?? '-'}
                         </div>

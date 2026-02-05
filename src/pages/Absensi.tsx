@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Upload, CheckCircle, XCircle, RotateCcw, Sparkles, Shield } from 'lucide-react';
+ import { Camera, Upload, CheckCircle, XCircle, RotateCcw, Shield, Loader2, ScanFace, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+ import { useFaceDetection } from '@/hooks/useFaceDetection';
 
 const Absensi: React.FC = () => {
   const { authUser, user } = useAuth();
@@ -17,17 +18,29 @@ const Absensi: React.FC = () => {
   const [photo, setPhoto] = useState<string | null>(null);
   const [permitFile, setPermitFile] = useState<File | null>(null);
   const [notes, setNotes] = useState('');
-  const [faceVerified, setFaceVerified] = useState(false);
-  const [headTurnDetected, setHeadTurnDetected] = useState(false);
   const [loading, setLoading] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const isGuru = authUser?.role === 'guru';
+   const {
+     isModelLoaded,
+     isDetecting,
+     faceDetected,
+     headTurnDetected,
+     error: faceError,
+     loadModels,
+     startDetection,
+     stopDetection,
+     resetDetection,
+   } = useFaceDetection();
 
-  // Allow attendance 24 hours (no time restriction for now)
   const canAttend = true;
 
+   // Load face detection models on mount
+   useEffect(() => {
+     loadModels();
+   }, [loadModels]);
+ 
   // Start camera
   const startCamera = async () => {
     try {
@@ -50,8 +63,16 @@ const Absensi: React.FC = () => {
   useEffect(() => {
     if (stream && videoRef.current && step === 'camera') {
       videoRef.current.srcObject = stream;
+       // Start face detection when video is ready
+       if (isModelLoaded && videoRef.current) {
+         videoRef.current.onloadedmetadata = () => {
+           if (videoRef.current) {
+             startDetection(videoRef.current);
+           }
+         };
+       }
     }
-  }, [stream, step]);
+   }, [stream, step, isModelLoaded, startDetection]);
 
   // Stop camera
   const stopCamera = () => {
@@ -59,6 +80,7 @@ const Absensi: React.FC = () => {
       stream.getTracks().forEach((track) => track.stop());
       setStream(null);
     }
+     stopDetection();
   };
 
   // Capture photo
@@ -71,21 +93,9 @@ const Absensi: React.FC = () => {
         context.drawImage(videoRef.current, 0, 0);
         const dataUrl = canvasRef.current.toDataURL('image/jpeg');
         setPhoto(dataUrl);
-        
-        // Simulate face verification (in real app, use face detection API)
-        setTimeout(() => {
-          setFaceVerified(true);
-          toast.success('Wajah terdeteksi! Silakan gelengkan kepala untuk verifikasi.');
-        }, 1000);
+         toast.success('Foto diambil! Gelengkan kepala untuk verifikasi.');
       }
     }
-  };
-
-  // Simulate head turn detection
-  const simulateHeadTurn = () => {
-    setHeadTurnDetected(true);
-    toast.success('Verifikasi wajah berhasil!');
-    stopCamera();
   };
 
   // Handle file upload for permit
@@ -95,6 +105,23 @@ const Absensi: React.FC = () => {
     }
   };
 
+   // Handle retake
+   const handleRetake = () => {
+     setPhoto(null);
+     resetDetection();
+     if (videoRef.current && isModelLoaded) {
+       startDetection(videoRef.current);
+     }
+   };
+ 
+   // Handle verification complete
+   useEffect(() => {
+     if (headTurnDetected && photo) {
+       toast.success('Verifikasi wajah berhasil!');
+       stopCamera();
+     }
+   }, [headTurnDetected, photo]);
+ 
   // Submit attendance
   const submitAttendance = async () => {
     if (!user) {
@@ -154,14 +181,14 @@ const Absensi: React.FC = () => {
   if (!canAttend) {
     return (
       <div className="max-w-2xl mx-auto">
-        <Card className="shadow-elegant border-0">
+         <Card className="shadow-card">
           <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mb-4">
-              <XCircle className="h-8 w-8 text-orange-500" />
+             <div className="mx-auto w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mb-4">
+               <XCircle className="h-8 w-8 text-destructive" />
             </div>
             <CardTitle>Di Luar Jam Absensi</CardTitle>
             <CardDescription>
-              Jam absensi untuk {isGuru ? 'Guru' : 'Siswa'}: {isGuru ? '06:50 - 07:30' : '07:00 - 08:00'}
+               Sistem absensi tidak tersedia saat ini
             </CardDescription>
           </CardHeader>
         </Card>
@@ -172,13 +199,13 @@ const Absensi: React.FC = () => {
   if (step === 'success') {
     return (
       <div className="max-w-2xl mx-auto animate-in fade-in duration-500">
-        <Card className="shadow-elegant border-0 overflow-hidden">
-          <div className="h-2 bg-gradient-to-r from-emerald-500 to-teal-500" />
+         <Card className="shadow-card overflow-hidden">
+           <div className="h-1.5 bg-gradient-to-r from-emerald-500 to-emerald-400" />
           <CardHeader className="text-center pt-8">
-            <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center mb-4 animate-float shadow-lg">
+             <div className="mx-auto w-20 h-20 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-4 animate-float">
               <CheckCircle className="h-10 w-10 text-emerald-500" />
             </div>
-            <CardTitle className="text-2xl text-emerald-600">Absensi Berhasil!</CardTitle>
+             <CardTitle className="text-2xl">Absensi Berhasil!</CardTitle>
             <CardDescription className="text-base mt-2">
               Kehadiran Anda telah tercatat pada
             </CardDescription>
@@ -192,11 +219,10 @@ const Absensi: React.FC = () => {
             </p>
           </CardHeader>
           <CardContent className="text-center pb-8">
-            <div className="flex items-center justify-center gap-2 text-muted-foreground mb-6">
-              <Sparkles className="h-4 w-4" />
-              <span className="text-sm">Terima kasih telah melakukan absensi</span>
-            </div>
-            <Button onClick={() => window.location.reload()} className="gradient-primary text-white shadow-elegant">
+             <p className="text-sm text-muted-foreground mb-6">
+               Terima kasih telah melakukan absensi
+             </p>
+             <Button onClick={() => window.location.reload()} size="lg" className="px-8">
               Kembali ke Dashboard
             </Button>
           </CardContent>
@@ -208,25 +234,28 @@ const Absensi: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500">
       {/* Info Banner */}
-      <Card className="shadow-card border-0 bg-gradient-to-r from-primary/5 to-accent/5">
+       <Card className="shadow-card bg-muted/50">
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
+             <div className="p-2.5 rounded-xl bg-primary/10">
               <Shield className="h-5 w-5 text-primary" />
             </div>
             <div>
               <p className="text-sm font-medium">Sistem Absensi Aktif 24 Jam</p>
-              <p className="text-xs text-muted-foreground">Verifikasi wajah diperlukan untuk kehadiran</p>
+               <p className="text-xs text-muted-foreground">
+                 {isModelLoaded ? 'Face detection siap digunakan' : 'Memuat model deteksi wajah...'}
+               </p>
             </div>
+             {!isModelLoaded && <Loader2 className="h-4 w-4 animate-spin ml-auto text-muted-foreground" />}
           </div>
         </CardContent>
       </Card>
 
-      <Card className="shadow-elegant border-0">
+       <Card className="shadow-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Camera className="h-5 w-5 text-primary" />
+             <div className="p-2 rounded-xl bg-primary/10">
+               <ScanFace className="h-5 w-5 text-primary" />
             </div>
             Absensi Harian
           </CardTitle>
@@ -235,6 +264,12 @@ const Absensi: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+           {faceError && (
+             <div className="p-3 rounded-xl bg-destructive/10 text-destructive text-sm">
+               {faceError}
+             </div>
+           )}
+ 
           {step === 'select' && (
             <>
               <div className="space-y-4">
@@ -248,9 +283,11 @@ const Absensi: React.FC = () => {
                     <RadioGroupItem value="hadir" id="hadir" className="peer sr-only" />
                     <Label
                       htmlFor="hadir"
-                      className="flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all peer-checked:border-primary peer-checked:bg-primary/5 hover:border-primary/50"
+                       className="flex flex-col items-center justify-center p-6 border-2 rounded-2xl cursor-pointer transition-all peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 hover:border-primary/50"
                     >
-                      <CheckCircle className="h-8 w-8 text-green-500 mb-2" />
+                       <div className="w-14 h-14 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-3">
+                         <ScanFace className="h-7 w-7 text-emerald-600" />
+                       </div>
                       <span className="font-semibold">Hadir</span>
                       <span className="text-xs text-muted-foreground">Verifikasi wajah</span>
                     </Label>
@@ -259,9 +296,11 @@ const Absensi: React.FC = () => {
                     <RadioGroupItem value="izin" id="izin" className="peer sr-only" />
                     <Label
                       htmlFor="izin"
-                      className="flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all peer-checked:border-primary peer-checked:bg-primary/5 hover:border-primary/50"
+                       className="flex flex-col items-center justify-center p-6 border-2 rounded-2xl cursor-pointer transition-all peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 hover:border-primary/50"
                     >
-                      <Upload className="h-8 w-8 text-orange-500 mb-2" />
+                       <div className="w-14 h-14 rounded-xl bg-amber-500/10 flex items-center justify-center mb-3">
+                         <Upload className="h-7 w-7 text-amber-600" />
+                       </div>
                       <span className="font-semibold">Izin</span>
                       <span className="text-xs text-muted-foreground">Upload surat</span>
                     </Label>
@@ -272,21 +311,34 @@ const Absensi: React.FC = () => {
               <Button
                 onClick={() => {
                   if (attendanceType === 'hadir') {
+                     if (!isModelLoaded) {
+                       toast.error('Model deteksi wajah belum siap');
+                       return;
+                     }
                     startCamera();
                   } else {
                     setStep('permit');
                   }
                 }}
-                className="w-full gradient-primary text-white shadow-elegant"
+                 className="w-full"
+                 size="lg"
+                 disabled={attendanceType === 'hadir' && !isModelLoaded}
               >
-                Lanjutkan
+                 {attendanceType === 'hadir' && !isModelLoaded ? (
+                   <>
+                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                     Memuat Model...
+                   </>
+                 ) : (
+                   'Lanjutkan'
+                 )}
               </Button>
             </>
           )}
 
           {step === 'camera' && (
             <div className="space-y-4">
-              <div className="relative rounded-xl overflow-hidden bg-black aspect-video">
+               <div className="relative rounded-2xl overflow-hidden bg-muted aspect-video">
                 {!photo ? (
                   <video
                     ref={videoRef}
@@ -301,61 +353,102 @@ const Absensi: React.FC = () => {
                 <canvas ref={canvasRef} className="hidden" />
 
                 {/* Overlay guides */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-48 h-60 border-4 border-white/50 rounded-full" />
+                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-8">
+                   <div className={`w-48 h-60 border-4 rounded-full transition-colors duration-300 ${
+                     faceDetected ? 'border-emerald-400' : 'border-white/40'
+                   }`} />
                 </div>
 
                 {/* Status indicator */}
                 <div className="absolute top-4 left-4">
-                  <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                    faceVerified ? 'bg-green-500/90 text-white' : 'bg-white/90'
+                   <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
+                     faceDetected 
+                       ? 'bg-emerald-500 text-white' 
+                       : 'bg-white/90 text-foreground'
                   }`}>
-                    <Camera className="h-4 w-4" />
-                    {faceVerified ? 'Wajah OK' : 'Posisikan wajah'}
+                     {isDetecting && !faceDetected && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                     {faceDetected && <CheckCircle className="h-3.5 w-3.5" />}
+                     {faceDetected ? 'Wajah Terdeteksi' : 'Mendeteksi wajah...'}
+                   </div>
+                 </div>
+ 
+                 {/* Head turn indicator */}
+                 {photo && !headTurnDetected && (
+                   <div className="absolute bottom-4 left-4 right-4">
+                     <div className="bg-white/95 backdrop-blur rounded-xl p-3 text-center">
+                       <p className="text-sm font-medium text-foreground">
+                         Gelengkan kepala ke kiri dan kanan
+                       </p>
+                       <div className="flex justify-center gap-3 mt-2">
+                         <div className="text-2xl animate-pulse">👈</div>
+                         <div className="text-2xl animate-pulse">👉</div>
+                       </div>
+                     </div>
                   </div>
-                </div>
-              </div>
-
-              {!photo ? (
-                <Button
-                  onClick={capturePhoto}
-                  className="w-full gradient-primary text-white"
-                >
-                  <Camera className="mr-2 h-4 w-4" />
-                  Ambil Foto
-                </Button>
-              ) : !headTurnDetected ? (
-                <div className="space-y-4">
-                  <p className="text-center text-sm text-muted-foreground">
-                    Gelengkan kepala ke kiri dan kanan untuk verifikasi
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setPhoto(null);
-                        setFaceVerified(false);
-                      }}
-                      className="flex-1"
-                    >
-                      <RotateCcw className="mr-2 h-4 w-4" />
-                      Ulangi
-                    </Button>
-                    <Button
-                      onClick={simulateHeadTurn}
-                      className="flex-1 gradient-primary text-white"
-                    >
-                      Verifikasi Selesai
-                    </Button>
-                  </div>
+                 )}
+ 
+                 {/* Verification complete */}
+                 {headTurnDetected && (
+                   <div className="absolute inset-0 bg-emerald-500/20 flex items-center justify-center">
+                     <div className="bg-white rounded-2xl p-6 text-center shadow-lg">
+                       <CheckCircle className="h-12 w-12 text-emerald-500 mx-auto mb-2" />
+                       <p className="font-semibold text-emerald-600">Verifikasi Berhasil!</p>
+                     </div>
+                   </div>
+                 )}
+               </div>
+ 
+               {/* Back button */}
+               <Button
+                 variant="ghost"
+                 onClick={() => {
+                   stopCamera();
+                   setPhoto(null);
+                   resetDetection();
+                   setStep('select');
+                 }}
+                 className="w-full"
+               >
+                 <ArrowLeft className="mr-2 h-4 w-4" />
+                 Kembali
+               </Button>
+ 
+               {!photo ? (
+                 <Button
+                   onClick={capturePhoto}
+                   className="w-full"
+                   size="lg"
+                   disabled={!faceDetected}
+                 >
+                   <Camera className="mr-2 h-4 w-4" />
+                   {faceDetected ? 'Ambil Foto' : 'Menunggu deteksi wajah...'}
+                 </Button>
+               ) : !headTurnDetected ? (
+                 <div className="flex gap-3">
+                   <Button
+                     variant="outline"
+                     onClick={handleRetake}
+                     className="flex-1"
+                   >
+                     <RotateCcw className="mr-2 h-4 w-4" />
+                     Ulangi
+                   </Button>
                 </div>
               ) : (
                 <Button
                   onClick={submitAttendance}
-                  className="w-full gradient-primary text-white"
+                   className="w-full"
+                   size="lg"
                   disabled={loading}
                 >
-                  {loading ? 'Menyimpan...' : 'Konfirmasi Absensi'}
+                   {loading ? (
+                     <>
+                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                       Menyimpan...
+                     </>
+                   ) : (
+                     'Konfirmasi Absensi'
+                   )}
                 </Button>
               )}
             </div>
@@ -365,7 +458,7 @@ const Absensi: React.FC = () => {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Upload Surat Izin</Label>
-                <div className="border-2 border-dashed rounded-xl p-8 text-center">
+                 <div className="border-2 border-dashed rounded-2xl p-8 text-center hover:border-primary/50 transition-colors">
                   <input
                     type="file"
                     accept="image/*,.pdf"
@@ -374,10 +467,14 @@ const Absensi: React.FC = () => {
                     id="permit-upload"
                   />
                   <label htmlFor="permit-upload" className="cursor-pointer">
-                    <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-sm text-muted-foreground">
-                      {permitFile ? permitFile.name : 'Klik untuk upload surat izin'}
-                    </p>
+                     <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                       <Upload className="h-8 w-8 text-muted-foreground" />
+                     </div>
+                     {permitFile ? (
+                       <p className="text-sm font-medium text-foreground">{permitFile.name}</p>
+                     ) : (
+                       <p className="text-sm text-muted-foreground">Klik untuk upload surat izin</p>
+                     )}
                   </label>
                 </div>
               </div>
@@ -388,10 +485,11 @@ const Absensi: React.FC = () => {
                   placeholder="Tambahkan keterangan..."
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
+                   className="min-h-[100px]"
                 />
               </div>
 
-              <div className="flex gap-2">
+               <div className="flex gap-3">
                 <Button
                   variant="outline"
                   onClick={() => setStep('select')}
@@ -401,10 +499,17 @@ const Absensi: React.FC = () => {
                 </Button>
                 <Button
                   onClick={submitAttendance}
-                  className="flex-1 gradient-primary text-white"
+                   className="flex-1"
                   disabled={loading || !permitFile}
                 >
-                  {loading ? 'Menyimpan...' : 'Kirim Izin'}
+                   {loading ? (
+                     <>
+                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                       Menyimpan...
+                     </>
+                   ) : (
+                     'Kirim Izin'
+                   )}
                 </Button>
               </div>
             </div>

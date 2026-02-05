@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, BookOpen, FileSpreadsheet, ClipboardList, Clock, Users, CheckCircle2, TrendingUp, Sparkles } from 'lucide-react';
+ import { Calendar, BookOpen, FileSpreadsheet, ClipboardList, Clock, CheckCircle2, TrendingUp, ArrowRight, AlertCircle, Heart } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
@@ -71,8 +71,7 @@ const Dashboard: React.FC = () => {
       description: 'Lakukan absensi kehadiran',
       icon: Calendar,
       url: '/absensi',
-      color: 'from-blue-500 to-cyan-500',
-      iconBg: 'bg-blue-500',
+       iconBg: 'bg-primary',
     },
     ...(isGuru ? [
       {
@@ -80,16 +79,14 @@ const Dashboard: React.FC = () => {
         description: 'Isi jurnal kegiatan mengajar',
         icon: BookOpen,
         url: '/jurnal',
-        color: 'from-purple-500 to-pink-500',
-        iconBg: 'bg-purple-500',
+         iconBg: 'bg-primary',
       },
       {
         title: 'Input Nilai',
         description: 'Masukkan nilai siswa',
         icon: FileSpreadsheet,
         url: '/nilai',
-        color: 'from-emerald-500 to-teal-500',
-        iconBg: 'bg-emerald-500',
+         iconBg: 'bg-primary',
       },
     ] : []),
     {
@@ -97,8 +94,7 @@ const Dashboard: React.FC = () => {
       description: 'Lihat riwayat kehadiran',
       icon: ClipboardList,
       url: '/kehadiran',
-      color: 'from-orange-500 to-amber-500',
-      iconBg: 'bg-orange-500',
+       iconBg: 'bg-primary',
     },
   ];
 
@@ -107,62 +103,59 @@ const Dashboard: React.FC = () => {
       label: 'Hadir',
       value: stats.totalHadir,
       icon: CheckCircle2,
-      color: 'text-emerald-500',
-      bg: 'bg-emerald-50 dark:bg-emerald-500/10',
+       color: 'text-emerald-600 dark:text-emerald-400',
+       bg: 'bg-emerald-500/10',
     },
     {
       label: 'Izin',
       value: stats.totalIzin,
       icon: Calendar,
-      color: 'text-blue-500',
-      bg: 'bg-blue-50 dark:bg-blue-500/10',
+       color: 'text-blue-600 dark:text-blue-400',
+       bg: 'bg-blue-500/10',
     },
     {
       label: 'Sakit',
       value: stats.totalSakit,
-      icon: Users,
-      color: 'text-amber-500',
-      bg: 'bg-amber-50 dark:bg-amber-500/10',
+       icon: Heart,
+       color: 'text-amber-600 dark:text-amber-400',
+       bg: 'bg-amber-500/10',
     },
     {
       label: 'Alpha',
       value: stats.totalAlpha,
-      icon: Clock,
-      color: 'text-red-500',
-      bg: 'bg-red-50 dark:bg-red-500/10',
+       icon: AlertCircle,
+       color: 'text-red-600 dark:text-red-400',
+       bg: 'bg-red-500/10',
     },
   ];
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Welcome Card */}
-      <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-primary via-primary to-accent shadow-elegant">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMzAiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-30" />
+       <Card className="relative overflow-hidden bg-primary text-primary-foreground shadow-card">
+         <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/10" />
         <CardHeader className="relative pb-2">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-white/80" />
-                <span className="text-white/80 text-sm font-medium">{getGreeting()}</span>
-              </div>
-              <CardTitle className="text-2xl md:text-3xl font-bold text-white">
+               <span className="text-primary-foreground/70 text-sm font-medium">{getGreeting()}</span>
+               <CardTitle className="text-2xl md:text-3xl font-bold text-primary-foreground tracking-tight">
                 {authUser?.profile?.full_name || 'Pengguna'}
               </CardTitle>
-              <CardDescription className="text-white/70 flex items-center gap-2">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/20 text-white">
+               <CardDescription className="text-primary-foreground/60 flex items-center gap-2">
+                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-foreground/10 text-primary-foreground">
                   {isGuru ? 'Guru' : 'Siswa'}
                 </span>
                 {authUser?.profile?.class && (
-                  <span className="text-white/60">• {authUser.profile.class}</span>
+                   <span className="text-primary-foreground/50">• {authUser.profile.class}</span>
                 )}
               </CardDescription>
             </div>
             <div className="hidden sm:flex flex-col items-end">
-              <div className="flex items-center gap-2 text-white/90 bg-white/10 px-4 py-2 rounded-xl backdrop-blur">
+               <div className="flex items-center gap-2 text-primary-foreground bg-primary-foreground/10 px-4 py-2 rounded-xl">
                 <Clock className="h-5 w-5" />
                 <span className="text-2xl font-bold tabular-nums">{timeString}</span>
               </div>
-              <span className="text-white/60 text-xs mt-1">
+               <span className="text-primary-foreground/50 text-xs mt-1">
                 {currentTime.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })}
               </span>
             </div>
@@ -170,12 +163,12 @@ const Dashboard: React.FC = () => {
         </CardHeader>
         <CardContent className="relative pt-4">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-white/90">
+             <div className="flex items-center gap-2 text-primary-foreground/80">
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-sm font-medium">Sistem aktif 24 jam</span>
             </div>
-            <span className="text-white/40">•</span>
-            <span className="text-white/70 text-sm">Semua fitur tersedia</span>
+             <span className="text-primary-foreground/30">•</span>
+             <span className="text-primary-foreground/60 text-sm">Semua fitur tersedia</span>
           </div>
         </CardContent>
       </Card>
@@ -183,14 +176,14 @@ const Dashboard: React.FC = () => {
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {statsCards.map((stat) => (
-          <Card key={stat.label} className="shadow-card border-0 hover:shadow-elegant transition-shadow duration-300">
-            <CardContent className="p-4">
+           <Card key={stat.label} className="shadow-card hover:shadow-elegant transition-all duration-300 hover:-translate-y-0.5">
+             <CardContent className="p-5">
               <div className="flex items-center gap-3">
-                <div className={`p-2.5 rounded-xl ${stat.bg}`}>
+                 <div className={`p-3 rounded-xl ${stat.bg}`}>
                   <stat.icon className={`h-5 w-5 ${stat.color}`} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{loading ? '-' : stat.value}</p>
+                   <p className="text-2xl font-bold tabular-nums">{loading ? '-' : stat.value}</p>
                   <p className="text-xs text-muted-foreground">{stat.label}</p>
                 </div>
               </div>
@@ -203,24 +196,25 @@ const Dashboard: React.FC = () => {
       <div>
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">Menu Utama</h2>
+           <h2 className="text-lg font-semibold tracking-tight">Menu Utama</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {menuItems.map((item) => (
             <Card
               key={item.title}
-              className="group shadow-card border-0 overflow-hidden transition-all duration-300 hover:shadow-elegant hover:-translate-y-1 cursor-pointer"
+               className="group shadow-card overflow-hidden transition-all duration-300 hover:shadow-elegant hover:-translate-y-0.5 cursor-pointer"
               onClick={() => navigate(item.url)}
             >
-              <CardContent className="p-6">
+               <CardContent className="p-5">
                 <div className="flex items-start gap-4">
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${item.color} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                    <item.icon className="h-6 w-6 text-white" />
+                   <div className={`p-3 rounded-xl ${item.iconBg} group-hover:scale-105 transition-transform duration-300`}>
+                     <item.icon className="h-6 w-6 text-primary-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">{item.title}</h3>
                     <p className="text-sm text-muted-foreground mt-1 truncate">{item.description}</p>
                   </div>
+                   <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                 </div>
               </CardContent>
             </Card>
@@ -229,22 +223,11 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Info Card */}
-      <Card className="shadow-card border-0 bg-gradient-to-r from-muted/50 to-muted/30">
-        <CardContent className="p-6">
-          <div className="flex items-start gap-4">
-            <div className="p-3 rounded-xl bg-primary/10">
-              <Sparkles className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg">Statistik Bulan Ini</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                Total kehadiran: <span className="font-medium text-foreground">{loading ? '-' : stats.totalHadir + stats.totalIzin + stats.totalSakit + stats.totalAlpha}</span> hari tercatat
-              </p>
-              <p className="text-xs text-muted-foreground mt-2">
-                Data diperbarui secara realtime dari sistem absensi
-              </p>
-            </div>
-          </div>
+       <Card className="shadow-card bg-muted/50">
+         <CardContent className="p-5">
+           <p className="text-sm text-muted-foreground">
+             <span className="font-medium text-foreground">Statistik Bulan Ini:</span> Total {loading ? '-' : stats.totalHadir + stats.totalIzin + stats.totalSakit + stats.totalAlpha} hari tercatat. Data diperbarui secara realtime.
+           </p>
         </CardContent>
       </Card>
     </div>

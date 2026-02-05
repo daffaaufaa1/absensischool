@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Plus, Calendar } from 'lucide-react';
+ import { BookOpen, Plus, Calendar, Clock, MapPin, FileText } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -108,12 +108,12 @@ const Jurnal: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Jurnal Harian</h1>
+           <h1 className="text-2xl font-bold tracking-tight">Jurnal Harian</h1>
           <p className="text-muted-foreground">Catat kegiatan mengajar harian Anda</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gradient-primary text-white shadow-elegant">
+             <Button>
               <Plus className="mr-2 h-4 w-4" />
               Tambah Jurnal
             </Button>
@@ -121,15 +121,20 @@ const Jurnal: React.FC = () => {
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-primary" />
+                 <div className="p-2 rounded-lg bg-primary/10">
+                   <BookOpen className="h-4 w-4 text-primary" />
+                 </div>
                 Tambah Jurnal Baru
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 mt-4">
               <div className="space-y-2">
-                <Label>Kelas</Label>
+                 <Label className="flex items-center gap-2">
+                   <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                   Kelas
+                 </Label>
                 <Select value={selectedClass} onValueChange={setSelectedClass}>
-                  <SelectTrigger>
+                   <SelectTrigger className="rounded-xl">
                     <SelectValue placeholder="Pilih kelas" />
                   </SelectTrigger>
                   <SelectContent>
@@ -143,9 +148,12 @@ const Jurnal: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Jam Mengajar</Label>
+                 <Label className="flex items-center gap-2">
+                   <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                   Jam Mengajar
+                 </Label>
                 <Select value={teachingHours} onValueChange={setTeachingHours}>
-                  <SelectTrigger>
+                   <SelectTrigger className="rounded-xl">
                     <SelectValue placeholder="Pilih jumlah jam" />
                   </SelectTrigger>
                   <SelectContent>
@@ -159,9 +167,12 @@ const Jurnal: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Lokasi Ruangan</Label>
+                 <Label className="flex items-center gap-2">
+                   <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                   Lokasi Ruangan
+                 </Label>
                 <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-                  <SelectTrigger>
+                   <SelectTrigger className="rounded-xl">
                     <SelectValue placeholder="Pilih ruangan" />
                   </SelectTrigger>
                   <SelectContent>
@@ -181,10 +192,11 @@ const Jurnal: React.FC = () => {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={4}
+                   className="rounded-xl"
                 />
               </div>
 
-              <div className="flex gap-2 pt-4">
+               <div className="flex gap-3 pt-4">
                 <Button
                   variant="outline"
                   onClick={() => setDialogOpen(false)}
@@ -194,7 +206,7 @@ const Jurnal: React.FC = () => {
                 </Button>
                 <Button
                   onClick={handleSubmit}
-                  className="flex-1 gradient-primary text-white"
+                   className="flex-1"
                   disabled={loading}
                 >
                   {loading ? 'Menyimpan...' : 'Simpan Jurnal'}
@@ -206,10 +218,12 @@ const Jurnal: React.FC = () => {
       </div>
 
       {/* Journal List */}
-      <Card className="shadow-card border-0">
+       <Card className="shadow-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-primary" />
+             <div className="p-2 rounded-lg bg-primary/10">
+               <Calendar className="h-4 w-4 text-primary" />
+             </div>
             Riwayat Jurnal
           </CardTitle>
           <CardDescription>Daftar jurnal yang telah Anda buat</CardDescription>
@@ -217,14 +231,16 @@ const Jurnal: React.FC = () => {
         <CardContent>
           {journals.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
+               <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                 <BookOpen className="h-8 w-8 text-muted-foreground" />
+               </div>
               <p>Belum ada jurnal yang dibuat</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
+                   <TableRow className="hover:bg-transparent">
                     <TableHead>Tanggal</TableHead>
                     <TableHead>Kelas</TableHead>
                     <TableHead>Jam</TableHead>

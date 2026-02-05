@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ClipboardList, Printer, Calendar, Filter } from 'lucide-react';
+ import { ClipboardList, Printer, Calendar, Filter, Download } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,10 +16,10 @@ interface AttendanceWithProfile extends Attendance {
 }
 
 const statusColors: Record<AttendanceStatus, string> = {
-  hadir: 'bg-green-100 text-green-800 border-green-200',
-  izin: 'bg-blue-100 text-blue-800 border-blue-200',
-  sakit: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  alpha: 'bg-red-100 text-red-800 border-red-200',
+   hadir: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+   izin: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+   sakit: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+   alpha: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',
 };
 
 const statusLabels: Record<AttendanceStatus, string> = {
@@ -167,33 +167,33 @@ const Kehadiran: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Rekap Kehadiran</h1>
+           <h1 className="text-2xl font-bold tracking-tight">Rekap Kehadiran</h1>
           <p className="text-muted-foreground">
             {isGuru ? 'Lihat rekap kehadiran siswa dan guru' : 'Lihat riwayat kehadiran Anda'}
           </p>
         </div>
         <Button variant="outline" onClick={handlePrint}>
-          <Printer className="mr-2 h-4 w-4" />
+           <Download className="mr-2 h-4 w-4" />
           Cetak
         </Button>
       </div>
 
       {isGuru ? (
         <Tabs defaultValue="students" className="space-y-4">
-          <TabsList>
+           <TabsList className="bg-muted/50">
             <TabsTrigger value="students">Kehadiran Siswa</TabsTrigger>
             <TabsTrigger value="personal">Kehadiran Saya</TabsTrigger>
           </TabsList>
 
           <TabsContent value="students" className="space-y-4">
             {/* Filters */}
-            <Card className="shadow-card border-0">
-              <CardContent className="pt-6">
+             <Card className="shadow-card">
+               <CardContent className="p-4">
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="flex items-center gap-2 flex-1">
                     <Filter className="h-4 w-4 text-muted-foreground" />
                     <Select value={selectedClass} onValueChange={setSelectedClass}>
-                      <SelectTrigger className="w-full sm:w-[200px]">
+                       <SelectTrigger className="w-full sm:w-[200px] rounded-xl">
                         <SelectValue placeholder="Semua Kelas" />
                       </SelectTrigger>
                       <SelectContent>
@@ -209,7 +209,7 @@ const Kehadiran: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                      <SelectTrigger className="w-full sm:w-[150px]">
+                       <SelectTrigger className="w-full sm:w-[150px] rounded-xl">
                         <SelectValue placeholder="Pilih Bulan" />
                       </SelectTrigger>
                       <SelectContent>
@@ -226,10 +226,12 @@ const Kehadiran: React.FC = () => {
             </Card>
 
             {/* Students Attendance Table */}
-            <Card className="shadow-card border-0">
+             <Card className="shadow-card">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <ClipboardList className="h-5 w-5 text-primary" />
+                   <div className="p-2 rounded-lg bg-primary/10">
+                     <ClipboardList className="h-4 w-4 text-primary" />
+                   </div>
                   Tabel Kehadiran Siswa
                 </CardTitle>
                 <CardDescription>
@@ -242,32 +244,34 @@ const Kehadiran: React.FC = () => {
                     <div className="text-center py-8 text-muted-foreground">Memuat data...</div>
                   ) : filteredAttendance.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
-                      <ClipboardList className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                       <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                         <ClipboardList className="h-8 w-8 text-muted-foreground" />
+                       </div>
                       <p>Belum ada data kehadiran</p>
                     </div>
                   ) : (
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-primary/10">
-                          <TableHead className="w-12 text-center">No</TableHead>
+                         <TableRow className="hover:bg-transparent">
+                           <TableHead className="w-12 text-center font-semibold">No</TableHead>
                           <TableHead>Nama</TableHead>
-                          <TableHead className="w-24 text-center">Kelas</TableHead>
-                          <TableHead className="w-28 text-center">Tanggal</TableHead>
-                          <TableHead className="w-20 text-center">Status</TableHead>
-                          <TableHead className="w-24 text-center">Jam</TableHead>
+                           <TableHead className="w-24 text-center font-semibold">Kelas</TableHead>
+                           <TableHead className="w-28 text-center font-semibold">Tanggal</TableHead>
+                           <TableHead className="w-20 text-center font-semibold">Status</TableHead>
+                           <TableHead className="w-24 text-center font-semibold">Jam</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {filteredAttendance.map((attendance, index) => (
                           <TableRow key={attendance.id}>
-                            <TableCell className="text-center">{index + 1}</TableCell>
+                             <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
                             <TableCell className="font-medium">
                               {attendance.profile?.full_name || 'Unknown'}
                             </TableCell>
                             <TableCell className="text-center">
                               {attendance.profile?.class || '-'}
                             </TableCell>
-                            <TableCell className="text-center">
+                             <TableCell className="text-center text-muted-foreground">
                               {new Date(attendance.date).toLocaleDateString('id-ID', {
                                 day: 'numeric',
                                 month: 'short',
@@ -276,7 +280,7 @@ const Kehadiran: React.FC = () => {
                             <TableCell className="text-center">
                               {renderStatusBadge(attendance.status)}
                             </TableCell>
-                            <TableCell className="text-center">
+                             <TableCell className="text-center text-muted-foreground">
                               {attendance.check_in_time?.slice(0, 5) || '-'}
                             </TableCell>
                           </TableRow>
@@ -290,10 +294,12 @@ const Kehadiran: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="personal">
-            <Card className="shadow-card border-0">
+             <Card className="shadow-card">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <ClipboardList className="h-5 w-5 text-primary" />
+                   <div className="p-2 rounded-lg bg-primary/10">
+                     <ClipboardList className="h-4 w-4 text-primary" />
+                   </div>
                   Kehadiran Saya
                 </CardTitle>
                 <CardDescription>Riwayat kehadiran Anda bulan ini</CardDescription>
@@ -301,24 +307,26 @@ const Kehadiran: React.FC = () => {
               <CardContent>
                 {myAttendance.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    <ClipboardList className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                     <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                       <ClipboardList className="h-8 w-8 text-muted-foreground" />
+                     </div>
                     <p>Belum ada data kehadiran</p>
                   </div>
                 ) : (
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-primary/10">
-                        <TableHead className="w-12 text-center">No</TableHead>
+                       <TableRow className="hover:bg-transparent">
+                         <TableHead className="w-12 text-center font-semibold">No</TableHead>
                         <TableHead>Tanggal</TableHead>
-                        <TableHead className="text-center">Status</TableHead>
-                        <TableHead className="text-center">Jam Masuk</TableHead>
+                         <TableHead className="text-center font-semibold">Status</TableHead>
+                         <TableHead className="text-center font-semibold">Jam Masuk</TableHead>
                         <TableHead>Keterangan</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {myAttendance.map((attendance, index) => (
                         <TableRow key={attendance.id}>
-                          <TableCell className="text-center">{index + 1}</TableCell>
+                           <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
                           <TableCell>
                             {new Date(attendance.date).toLocaleDateString('id-ID', {
                               weekday: 'long',
@@ -330,10 +338,10 @@ const Kehadiran: React.FC = () => {
                           <TableCell className="text-center">
                             {renderStatusBadge(attendance.status)}
                           </TableCell>
-                          <TableCell className="text-center">
+                           <TableCell className="text-center text-muted-foreground">
                             {attendance.check_in_time?.slice(0, 5) || '-'}
                           </TableCell>
-                          <TableCell>{attendance.notes || '-'}</TableCell>
+                           <TableCell className="text-muted-foreground">{attendance.notes || '-'}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -345,18 +353,20 @@ const Kehadiran: React.FC = () => {
         </Tabs>
       ) : (
         // Student view - only show personal attendance
-        <Card className="shadow-card border-0">
+         <Card className="shadow-card">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
-                  <ClipboardList className="h-5 w-5 text-primary" />
+                   <div className="p-2 rounded-lg bg-primary/10">
+                     <ClipboardList className="h-4 w-4 text-primary" />
+                   </div>
                   Riwayat Kehadiran
                 </CardTitle>
                 <CardDescription>H = Hadir, I = Izin, S = Sakit, A = Alpha</CardDescription>
               </div>
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-[150px]">
+                 <SelectTrigger className="w-[150px] rounded-xl">
                   <SelectValue placeholder="Pilih Bulan" />
                 </SelectTrigger>
                 <SelectContent>
@@ -375,24 +385,26 @@ const Kehadiran: React.FC = () => {
                 <div className="text-center py-8 text-muted-foreground">Memuat data...</div>
               ) : myAttendance.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  <ClipboardList className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                   <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                     <ClipboardList className="h-8 w-8 text-muted-foreground" />
+                   </div>
                   <p>Belum ada data kehadiran bulan ini</p>
                 </div>
               ) : (
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-primary/10">
-                      <TableHead className="w-12 text-center">No</TableHead>
+                     <TableRow className="hover:bg-transparent">
+                       <TableHead className="w-12 text-center font-semibold">No</TableHead>
                       <TableHead>Tanggal</TableHead>
-                      <TableHead className="text-center">Status</TableHead>
-                      <TableHead className="text-center">Jam Masuk</TableHead>
+                       <TableHead className="text-center font-semibold">Status</TableHead>
+                       <TableHead className="text-center font-semibold">Jam Masuk</TableHead>
                       <TableHead>Keterangan</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {myAttendance.map((attendance, index) => (
                       <TableRow key={attendance.id}>
-                        <TableCell className="text-center">{index + 1}</TableCell>
+                         <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
                         <TableCell>
                           {new Date(attendance.date).toLocaleDateString('id-ID', {
                             weekday: 'long',
@@ -404,10 +416,10 @@ const Kehadiran: React.FC = () => {
                         <TableCell className="text-center">
                           {renderStatusBadge(attendance.status)}
                         </TableCell>
-                        <TableCell className="text-center">
+                         <TableCell className="text-center text-muted-foreground">
                           {attendance.check_in_time?.slice(0, 5) || '-'}
                         </TableCell>
-                        <TableCell>{attendance.notes || '-'}</TableCell>
+                         <TableCell className="text-muted-foreground">{attendance.notes || '-'}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

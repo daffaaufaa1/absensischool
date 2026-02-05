@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff, User, Lock, Sparkles, ArrowRight, Shield } from 'lucide-react';
+ import { Eye, EyeOff, User, Lock, ArrowRight, GraduationCap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,12 +50,12 @@ const Login: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
       {/* Top curved gradient section */}
-      <div className="relative h-[45vh] min-h-[280px] flex flex-col items-center justify-center">
+       <div className="relative h-[42vh] min-h-[260px] flex flex-col items-center justify-center">
         {/* Background gradient with curves */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-accent overflow-hidden">
+         <div className="absolute inset-0 bg-primary overflow-hidden">
           {/* Decorative circles */}
-          <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-2xl" />
-          <div className="absolute top-20 -left-20 w-48 h-48 bg-white/10 rounded-full blur-2xl" />
+           <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
+           <div className="absolute top-20 -left-20 w-48 h-48 bg-white/5 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[200%] h-32 bg-background rounded-t-[100%]" />
         </div>
         
@@ -63,21 +63,17 @@ const Login: React.FC = () => {
         <div className="relative z-10 flex flex-col items-center text-center px-4">
           {/* Animated Logo */}
           <div className="relative mb-4">
-            <div className="w-24 h-24 rounded-3xl bg-white/20 backdrop-blur-xl flex items-center justify-center shadow-2xl animate-float">
-              <div className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center">
-                <span className="text-4xl font-black text-primary">F</span>
+             <div className="w-24 h-24 rounded-3xl bg-white/10 backdrop-blur flex items-center justify-center shadow-2xl animate-float">
+               <div className="w-20 h-20 rounded-2xl bg-primary-foreground flex items-center justify-center">
+                 <GraduationCap className="w-10 h-10 text-primary" />
               </div>
-            </div>
-            <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-emerald-400 flex items-center justify-center shadow-lg">
-              <Shield className="w-4 h-4 text-white" />
             </div>
           </div>
           
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">
+           <h1 className="text-2xl md:text-3xl font-bold text-primary-foreground tracking-tight mb-1">
             FADAM SCHOOL
           </h1>
-          <p className="text-white/70 text-sm flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4" />
+           <p className="text-primary-foreground/60 text-sm">
             Sistem Absensi Digital
           </p>
         </div>
@@ -98,7 +94,7 @@ const Login: React.FC = () => {
               <Label htmlFor="username" className="text-sm font-medium">Username</Label>
               <div className="relative">
                 <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center">
-                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                   <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
                     <User className="h-4 w-4 text-primary" />
                   </div>
                 </div>
@@ -108,7 +104,7 @@ const Login: React.FC = () => {
                   placeholder="Masukkan username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                  className="pl-14 h-12 text-base rounded-xl border-2 border-border focus:border-primary transition-colors"
+                   className="pl-14 h-12 text-base rounded-xl"
                   required
                 />
               </div>
@@ -119,7 +115,7 @@ const Login: React.FC = () => {
               <Label htmlFor="password" className="text-sm font-medium">Password</Label>
               <div className="relative">
                 <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center">
-                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                   <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
                     <Lock className="h-4 w-4 text-primary" />
                   </div>
                 </div>
@@ -129,7 +125,7 @@ const Login: React.FC = () => {
                   placeholder="Masukkan password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-14 pr-12 h-12 text-base rounded-xl border-2 border-border focus:border-primary transition-colors"
+                   className="pl-14 pr-12 h-12 text-base rounded-xl"
                   required
                 />
                 <button
@@ -145,7 +141,7 @@ const Login: React.FC = () => {
             {/* Submit button */}
             <Button
               type="submit"
-              className="w-full h-12 text-base font-semibold rounded-xl bg-gradient-to-r from-primary to-accent text-white shadow-lg hover:shadow-xl hover:opacity-95 transition-all duration-300 group"
+               className="w-full h-12 text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group"
               disabled={loading}
             >
               {loading ? (
@@ -177,7 +173,7 @@ const Login: React.FC = () => {
             <Link to="/register">
               <Button
                 variant="outline"
-                className="w-full h-12 text-base font-medium rounded-xl border-2 hover:bg-primary/5 hover:border-primary transition-all duration-300"
+                 className="w-full h-12 text-base font-medium rounded-xl"
               >
                 Daftar Akun Baru
               </Button>

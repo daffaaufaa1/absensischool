@@ -6,7 +6,7 @@ import {
   FileSpreadsheet, 
   ClipboardList,
   Home,
-  Sparkles
+   GraduationCap
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { NavLink } from '@/components/NavLink';
@@ -44,7 +44,7 @@ const DashboardSidebar: React.FC = () => {
 
   return (
     <Sidebar
-      className={`gradient-sidebar border-r-0 transition-all duration-300 ${
+       className={`bg-sidebar border-r border-sidebar-border transition-all duration-300 ${
         collapsed ? 'w-16' : 'w-64'
       }`}
       collapsible="icon"
@@ -52,21 +52,21 @@ const DashboardSidebar: React.FC = () => {
       <SidebarContent className="py-4">
         {/* Logo Section */}
         {!collapsed && (
-          <div className="px-4 mb-6">
-            <div className="flex items-center gap-2 text-white">
-              <div className="p-2 rounded-lg bg-white/20 backdrop-blur">
-                <Sparkles className="h-5 w-5" />
+           <div className="px-4 mb-8">
+             <div className="flex items-center gap-3 text-sidebar-foreground">
+               <div className="p-2.5 rounded-xl bg-sidebar-accent">
+                 <GraduationCap className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="font-bold text-sm">FADAM SCHOOL</h2>
-                <p className="text-[10px] text-white/60">Sistem Absensi Digital</p>
+                 <h2 className="font-bold text-sm tracking-tight">FADAM SCHOOL</h2>
+                 <p className="text-[10px] text-sidebar-foreground/60">Sistem Absensi Digital</p>
               </div>
             </div>
           </div>
         )}
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-white/70 uppercase text-xs tracking-wider px-4 mb-2">
+           <SidebarGroupLabel className="text-sidebar-foreground/50 uppercase text-[10px] font-semibold tracking-widest px-4 mb-3">
             {!collapsed && 'Menu Utama'}
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -80,10 +80,10 @@ const DashboardSidebar: React.FC = () => {
                   >
                     <NavLink
                       to={item.url}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-white/80 hover:text-white hover:bg-white/10 ${
-                        isActive(item.url) ? 'bg-white/20 text-white font-medium shadow-lg' : ''
+                       className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent ${
+                         isActive(item.url) ? 'bg-sidebar-accent text-sidebar-foreground font-medium' : ''
                       }`}
-                      activeClassName="bg-white/20 text-white font-medium"
+                       activeClassName="bg-sidebar-accent text-sidebar-foreground font-medium"
                     >
                       <item.icon className={`h-5 w-5 ${collapsed ? 'mx-auto' : ''}`} />
                       {!collapsed && <span>{item.title}</span>}
@@ -97,13 +97,13 @@ const DashboardSidebar: React.FC = () => {
 
         {/* System Status */}
         {!collapsed && (
-          <div className="mt-auto px-4 py-4">
-            <div className="bg-white/10 rounded-xl p-3">
+           <div className="mt-auto px-4 py-6">
+             <div className="bg-sidebar-accent rounded-xl p-4">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-white/80 text-xs font-medium">Sistem Aktif 24 Jam</span>
+                 <span className="text-sidebar-foreground/90 text-xs font-medium">Sistem Aktif 24 Jam</span>
               </div>
-              <p className="text-white/50 text-[10px] mt-1">Semua fitur tersedia</p>
+               <p className="text-sidebar-foreground/50 text-[10px] mt-1.5">Semua fitur tersedia</p>
             </div>
           </div>
         )}

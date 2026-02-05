@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, LogOut, FileText, Users, Menu, X } from 'lucide-react';
+ import { User, LogOut, Users, Menu, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+ import { ThemeToggle } from '@/components/ThemeToggle';
 
 const Navbar: React.FC = () => {
   const { authUser, signOut } = useAuth();
@@ -43,31 +44,34 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="gradient-sidebar shadow-elegant sticky top-0 z-50">
+     <nav className="bg-sidebar border-b border-sidebar-border sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
-              <span className="text-white font-bold text-lg">F</span>
+             <div className="w-10 h-10 rounded-xl bg-sidebar-accent flex items-center justify-center">
+               <span className="text-sidebar-foreground font-bold text-lg">F</span>
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-white font-bold text-lg">ABSENSI FADAM SCHOOL</h1>
+               <h1 className="text-sidebar-foreground font-bold text-lg tracking-tight">FADAM SCHOOL</h1>
             </div>
           </div>
 
           {/* Welcome text - center */}
           <div className="hidden md:flex items-center">
-            <p className="text-white/90 text-sm font-medium">{getGreeting()}</p>
+             <p className="text-sidebar-foreground/80 text-sm font-medium">{getGreeting()}</p>
           </div>
 
           {/* Right side - Profile dropdown */}
           <div className="flex items-center gap-2">
+             {/* Theme toggle */}
+             <ThemeToggle />
+ 
             {/* Mobile menu button */}
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden text-white hover:bg-white/20"
+               className="md:hidden text-sidebar-foreground hover:bg-sidebar-accent"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -78,15 +82,15 @@ const Navbar: React.FC = () => {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="flex items-center gap-2 hover:bg-white/20 text-white"
+                   className="flex items-center gap-2 hover:bg-sidebar-accent text-sidebar-foreground"
                 >
-                  <Avatar className="h-8 w-8 border-2 border-white/30">
+                   <Avatar className="h-8 w-8 border-2 border-sidebar-accent">
                     <AvatarImage src={authUser?.profile?.avatar_url || undefined} />
-                    <AvatarFallback className="bg-white/20 text-white text-sm">
+                     <AvatarFallback className="bg-sidebar-accent text-sidebar-foreground text-sm">
                       {getInitials()}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="hidden sm:inline text-sm font-medium">
+                   <span className="hidden sm:inline text-sm font-medium text-sidebar-foreground">
                     {authUser?.profile?.full_name || 'User'}
                   </span>
                 </Button>
@@ -117,8 +121,8 @@ const Navbar: React.FC = () => {
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-white/20">
-            <p className="text-white/90 text-sm font-medium text-center">{getGreeting()}</p>
+           <div className="md:hidden py-4 border-t border-sidebar-border">
+             <p className="text-sidebar-foreground/80 text-sm font-medium text-center">{getGreeting()}</p>
           </div>
         )}
       </div>
