@@ -41,25 +41,25 @@ const App = () => (
                    </ProtectedRoute>
                  }
                >
-                 <Route path="/dashboard" element={<Dashboard />} />
-                 <Route path="/absensi" element={<Absensi />} />
-                 <Route
-                   path="/jurnal"
-                   element={
-                     <ProtectedRoute allowedRoles={['guru']}>
-                       <Jurnal />
-                     </ProtectedRoute>
-                   }
-                 />
-                 <Route
-                   path="/nilai"
-                   element={
-                     <ProtectedRoute allowedRoles={['guru']}>
-                       <InputNilai />
-                     </ProtectedRoute>
-                   }
-                 />
-                 <Route path="/kehadiran" element={<Kehadiran />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/absensi" element={<Absensi />} />
+                <Route
+                  path="/jurnal"
+                  element={
+                    <ProtectedRoute allowedRoles={['guru']}>
+                      <Jurnal />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/nilai"
+                  element={
+                    <ProtectedRoute allowedRoles={['guru']}>
+                      <InputNilai />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="/kehadiran" element={<Kehadiran />} />
                  <Route path="/biodata" element={<Biodata />} />
                  <Route
                    path="/pengurus-access"
