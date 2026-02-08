@@ -29,6 +29,7 @@ const Absensi: React.FC = () => {
     isDetecting,
     faceDetected,
     headTurnDetected,
+    currentFace,
     error: faceError,
     loadModels,
     startDetection,
