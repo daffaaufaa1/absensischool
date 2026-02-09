@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          created_at: string
+          id: string
+          password_hash: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          password_hash: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          password_hash?: string
+          username?: string
+        }
+        Relationships: []
+      }
       attendance: {
         Row: {
           check_in_time: string | null
@@ -252,6 +273,44 @@ export type Database = {
         }
         Relationships: []
       }
+      students: {
+        Row: {
+          class_id: string | null
+          created_at: string
+          full_name: string
+          id: string
+          nis: string
+          password_hash: string
+          updated_at: string
+        }
+        Insert: {
+          class_id?: string | null
+          created_at?: string
+          full_name: string
+          id?: string
+          nis: string
+          password_hash: string
+          updated_at?: string
+        }
+        Update: {
+          class_id?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          nis?: string
+          password_hash?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "students_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subjects: {
         Row: {
           created_at: string
@@ -267,6 +326,36 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      teachers: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          nit: string
+          password_hash: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id?: string
+          nit: string
+          password_hash: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          nit?: string
+          password_hash?: string
+          subject?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -307,8 +396,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      hash_password: { Args: { password: string }; Returns: string }
       is_pengurus_kelas: {
         Args: { _class_name: string; _user_id: string }
+        Returns: boolean
+      }
+      verify_password: {
+        Args: { input_password: string; stored_hash: string }
         Returns: boolean
       }
     }
