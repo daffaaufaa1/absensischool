@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
- import { Calendar, BookOpen, FileSpreadsheet, ClipboardList, Clock, CheckCircle2, TrendingUp, ArrowRight, AlertCircle, Heart } from 'lucide-react';
+import { Calendar, BookOpen, FileSpreadsheet, ClipboardList, Clock, CheckCircle2, TrendingUp, ArrowRight, AlertCircle, Heart } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,7 +23,6 @@ const Dashboard: React.FC = () => {
   const minutes = currentTime.getMinutes();
   const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 
-  // Get greeting based on time
   const getGreeting = () => {
     if (hours < 12) return 'Selamat Pagi';
     if (hours < 15) return 'Selamat Siang';
@@ -71,7 +70,6 @@ const Dashboard: React.FC = () => {
       description: 'Lakukan absensi kehadiran',
       icon: Calendar,
       url: '/absensi',
-       iconBg: 'bg-primary',
     },
     ...(isGuru ? [
       {
@@ -79,14 +77,12 @@ const Dashboard: React.FC = () => {
         description: 'Isi jurnal kegiatan mengajar',
         icon: BookOpen,
         url: '/jurnal',
-         iconBg: 'bg-primary',
       },
       {
         title: 'Input Nilai',
         description: 'Masukkan nilai siswa',
         icon: FileSpreadsheet,
         url: '/nilai',
-         iconBg: 'bg-primary',
       },
     ] : []),
     {
@@ -94,7 +90,6 @@ const Dashboard: React.FC = () => {
       description: 'Lihat riwayat kehadiran',
       icon: ClipboardList,
       url: '/kehadiran',
-       iconBg: 'bg-primary',
     },
   ];
 
@@ -103,87 +98,76 @@ const Dashboard: React.FC = () => {
       label: 'Hadir',
       value: stats.totalHadir,
       icon: CheckCircle2,
-       color: 'text-emerald-600 dark:text-emerald-400',
-       bg: 'bg-emerald-500/10',
+      color: 'text-emerald-600 dark:text-emerald-400',
+      bg: 'bg-emerald-500/10',
     },
     {
       label: 'Izin',
       value: stats.totalIzin,
       icon: Calendar,
-       color: 'text-blue-600 dark:text-blue-400',
-       bg: 'bg-blue-500/10',
+      color: 'text-blue-600 dark:text-blue-400',
+      bg: 'bg-blue-500/10',
     },
     {
       label: 'Sakit',
       value: stats.totalSakit,
-       icon: Heart,
-       color: 'text-amber-600 dark:text-amber-400',
-       bg: 'bg-amber-500/10',
+      icon: Heart,
+      color: 'text-amber-600 dark:text-amber-400',
+      bg: 'bg-amber-500/10',
     },
     {
       label: 'Alpha',
       value: stats.totalAlpha,
-       icon: AlertCircle,
-       color: 'text-red-600 dark:text-red-400',
-       bg: 'bg-red-500/10',
+      icon: AlertCircle,
+      color: 'text-red-600 dark:text-red-400',
+      bg: 'bg-red-500/10',
     },
   ];
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-fade-in">
       {/* Welcome Card */}
-       <Card className="relative overflow-hidden bg-primary text-primary-foreground shadow-card">
-         <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/10" />
+      <Card className="relative overflow-hidden bg-primary text-primary-foreground shadow-card">
         <CardHeader className="relative pb-2">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-               <span className="text-primary-foreground/70 text-sm font-medium">{getGreeting()}</span>
-               <CardTitle className="text-2xl md:text-3xl font-bold text-primary-foreground tracking-tight">
+              <span className="text-primary-foreground/70 text-sm font-medium">{getGreeting()}</span>
+              <CardTitle className="text-2xl md:text-3xl font-bold text-primary-foreground tracking-tight">
                 {authUser?.profile?.full_name || 'Pengguna'}
               </CardTitle>
-               <CardDescription className="text-primary-foreground/60 flex items-center gap-2">
-                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-foreground/10 text-primary-foreground">
+              <CardDescription className="text-primary-foreground/60 flex items-center gap-2">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-foreground/15 text-primary-foreground">
                   {isGuru ? 'Guru' : 'Siswa'}
                 </span>
                 {authUser?.profile?.class && (
-                   <span className="text-primary-foreground/50">• {authUser.profile.class}</span>
+                  <span className="text-primary-foreground/50">• {authUser.profile.class}</span>
                 )}
               </CardDescription>
             </div>
             <div className="hidden sm:flex flex-col items-end">
-               <div className="flex items-center gap-2 text-primary-foreground bg-primary-foreground/10 px-4 py-2 rounded-xl">
+              <div className="flex items-center gap-2 text-primary-foreground bg-primary-foreground/10 px-4 py-2 rounded-xl">
                 <Clock className="h-5 w-5" />
                 <span className="text-2xl font-bold tabular-nums">{timeString}</span>
               </div>
-               <span className="text-primary-foreground/50 text-xs mt-1">
+              <span className="text-primary-foreground/50 text-xs mt-1">
                 {currentTime.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })}
               </span>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="relative pt-4">
-          <div className="flex items-center gap-3">
-             <div className="flex items-center gap-2 text-primary-foreground/80">
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-sm font-medium">Sistem aktif 24 jam</span>
-            </div>
-             <span className="text-primary-foreground/30">•</span>
-             <span className="text-primary-foreground/60 text-sm">Semua fitur tersedia</span>
-          </div>
-        </CardContent>
       </Card>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {statsCards.map((stat) => (
-           <Card key={stat.label} className="shadow-card hover:shadow-elegant transition-all duration-300 hover:-translate-y-0.5">
-             <CardContent className="p-5">
+          <Card key={stat.label} className="shadow-card hover:shadow-elegant transition-shadow duration-200">
+            <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                 <div className={`p-3 rounded-xl ${stat.bg}`}>
+                <div className={`p-2.5 rounded-xl ${stat.bg}`}>
                   <stat.icon className={`h-5 w-5 ${stat.color}`} />
                 </div>
                 <div>
-                   <p className="text-2xl font-bold tabular-nums">{loading ? '-' : stat.value}</p>
+                  <p className="text-2xl font-bold tabular-nums">{loading ? '-' : stat.value}</p>
                   <p className="text-xs text-muted-foreground">{stat.label}</p>
                 </div>
               </div>
@@ -196,40 +180,31 @@ const Dashboard: React.FC = () => {
       <div>
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="h-5 w-5 text-primary" />
-           <h2 className="text-lg font-semibold tracking-tight">Menu Utama</h2>
+          <h2 className="text-lg font-semibold tracking-tight">Menu Utama</h2>
         </div>
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {menuItems.map((item) => (
             <Card
               key={item.title}
-               className="group shadow-card overflow-hidden transition-all duration-300 hover:shadow-elegant hover:-translate-y-0.5 cursor-pointer"
+              className="group shadow-card overflow-hidden transition-shadow duration-200 hover:shadow-elegant cursor-pointer"
               onClick={() => navigate(item.url)}
             >
-               <CardContent className="p-5">
+              <CardContent className="p-4">
                 <div className="flex items-start gap-4">
-                   <div className={`p-3 rounded-xl ${item.iconBg} group-hover:scale-105 transition-transform duration-300`}>
-                     <item.icon className="h-6 w-6 text-primary-foreground" />
+                  <div className="p-3 rounded-xl bg-primary text-primary-foreground">
+                    <item.icon className="h-6 w-6" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">{item.title}</h3>
-                    <p className="text-sm text-muted-foreground mt-1 truncate">{item.description}</p>
+                    <p className="text-sm text-muted-foreground mt-0.5 truncate">{item.description}</p>
                   </div>
-                   <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                  <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       </div>
-
-      {/* Info Card */}
-       <Card className="shadow-card bg-muted/50">
-         <CardContent className="p-5">
-           <p className="text-sm text-muted-foreground">
-             <span className="font-medium text-foreground">Statistik Bulan Ini:</span> Total {loading ? '-' : stats.totalHadir + stats.totalIzin + stats.totalSakit + stats.totalAlpha} hari tercatat. Data diperbarui secara realtime.
-           </p>
-        </CardContent>
-      </Card>
     </div>
   );
 };
