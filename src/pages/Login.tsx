@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, IdCard, Lock, ArrowRight, GraduationCap } from 'lucide-react';
+import { Eye, EyeOff, IdCard, Lock, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,25 +44,25 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
-      {/* Top curved gradient section */}
-      <div className="relative h-[42vh] min-h-[260px] flex flex-col items-center justify-center">
+      {/* Top gradient section */}
+      <div className="relative h-[38vh] min-h-[240px] flex flex-col items-center justify-center">
         <div className="absolute inset-0 bg-primary overflow-hidden">
-          <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
-          <div className="absolute top-20 -left-20 w-48 h-48 bg-white/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[200%] h-32 bg-background rounded-t-[100%]" />
+          <div className="absolute -top-16 -right-16 w-48 h-48 bg-white/5 rounded-full" />
+          <div className="absolute top-16 -left-16 w-36 h-36 bg-white/5 rounded-full" />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[200%] h-28 bg-background rounded-t-[100%]" />
         </div>
         
-        {/* Logo and branding */}
+        {/* Logo */}
         <div className="relative z-10 flex flex-col items-center text-center px-4">
           <div className="relative mb-4">
-            <div className="w-24 h-24 rounded-3xl bg-white/10 backdrop-blur flex items-center justify-center shadow-2xl animate-float">
-              <div className="w-20 h-20 rounded-2xl bg-primary-foreground flex items-center justify-center">
-                <GraduationCap className="w-10 h-10 text-primary" />
+            <div className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center shadow-xl">
+              <div className="w-16 h-16 rounded-xl bg-primary-foreground flex items-center justify-center">
+                <span className="text-primary font-black text-2xl tracking-tighter">FA</span>
               </div>
             </div>
           </div>
           
-          <h1 className="text-2xl md:text-3xl font-bold text-primary-foreground tracking-tight mb-1">
+          <h1 className="text-2xl md:text-3xl font-bold text-primary-foreground tracking-tight mb-0.5">
             FADAM SCHOOL
           </h1>
           <p className="text-primary-foreground/60 text-sm">
@@ -72,9 +72,8 @@ const Login: React.FC = () => {
       </div>
 
       {/* Form section */}
-      <div className="flex-1 flex flex-col px-6 pt-4 pb-8 -mt-8 relative z-20">
+      <div className="flex-1 flex flex-col px-6 pt-2 pb-8 -mt-8 relative z-20">
         <div className="max-w-sm mx-auto w-full">
-          {/* Welcome text */}
           <div className="text-center mb-6">
             <h2 className="text-xl font-bold text-foreground">Selamat Datang!</h2>
             <p className="text-muted-foreground text-sm mt-1">Masuk untuk melanjutkan</p>
@@ -133,7 +132,7 @@ const Login: React.FC = () => {
             {/* Submit button */}
             <Button
               type="submit"
-              className="w-full h-12 text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group"
+              className="w-full h-12 text-base font-semibold rounded-xl shadow-lg transition-all duration-200 group"
               disabled={loading}
             >
               {loading ? (
@@ -154,7 +153,7 @@ const Login: React.FC = () => {
         {/* Footer */}
         <div className="mt-auto pt-6">
           <p className="text-center text-xs text-muted-foreground">
-            © 2024 FADAM School. All rights reserved.
+            © 2024 FADAM School
           </p>
         </div>
       </div>

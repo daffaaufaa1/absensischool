@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Camera, Upload, CheckCircle, XCircle, RotateCcw, Shield, Loader2, ScanFace, ArrowLeft, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useFaceDetection } from '@/hooks/useFaceDetection';
 
 const Absensi: React.FC = () => {
+  const navigate = useNavigate();
   const { authUser, user } = useAuth();
   const [attendanceType, setAttendanceType] = useState<'hadir' | 'izin'>('hadir');
   const [step, setStep] = useState<'select' | 'camera' | 'permit' | 'success' | 'already'>('select');
@@ -256,7 +258,7 @@ const Absensi: React.FC = () => {
                 <span className="font-medium">{todayAttendance?.check_in_time?.slice(0, 5) || '-'}</span>
               </div>
             </div>
-            <Button onClick={() => window.location.href = '/dashboard'} size="lg" className="px-8">
+            <Button onClick={() => navigate('/dashboard')} size="lg" className="px-8">
               Kembali ke Dashboard
             </Button>
           </CardContent>
@@ -291,7 +293,7 @@ const Absensi: React.FC = () => {
             <p className="text-sm text-muted-foreground mb-6">
               Terima kasih telah melakukan absensi
             </p>
-            <Button onClick={() => window.location.href = '/dashboard'} size="lg" className="px-8">
+            <Button onClick={() => navigate('/dashboard')} size="lg" className="px-8">
               Kembali ke Dashboard
             </Button>
           </CardContent>
@@ -301,24 +303,7 @@ const Absensi: React.FC = () => {
   }
 
   return (
-    <div className="max-w-md mx-auto space-y-6 animate-in fade-in duration-500">
-      {/* Info Banner */}
-      <Card className="shadow-card bg-muted/50">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-primary/10">
-              <Shield className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">Sistem Absensi Aktif 24 Jam</p>
-              <p className="text-xs text-muted-foreground">
-                {isModelLoaded ? 'Face detection siap digunakan' : 'Memuat model deteksi wajah...'}
-              </p>
-            </div>
-            {!isModelLoaded && <Loader2 className="h-4 w-4 animate-spin ml-auto text-muted-foreground" />}
-          </div>
-        </CardContent>
-      </Card>
+    <div className="max-w-md mx-auto space-y-6 animate-fade-in">
 
       <Card className="shadow-card">
         <CardHeader>
