@@ -397,6 +397,7 @@ export type Database = {
         Returns: boolean
       }
       hash_password: { Args: { password: string }; Returns: string }
+      is_admin_session: { Args: never; Returns: boolean }
       is_pengurus_kelas: {
         Args: { _class_name: string; _user_id: string }
         Returns: boolean

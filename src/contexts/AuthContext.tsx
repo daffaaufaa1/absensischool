@@ -8,8 +8,8 @@ interface AuthContextType {
   session: Session | null;
   authUser: AuthUser | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string, role: UserRole, className?: string) => Promise<{ error: Error | null }>;
+  isAdmin: boolean;
+  loginWithNisNit: (nisNit: string, password: string) => Promise<{ error: string | null; isAdmin?: boolean }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -29,10 +29,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
     try {
-      // Fetch profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -43,7 +43,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('Error fetching profile:', profileError);
       }
 
-      // Fetch role
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
@@ -76,14 +75,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // Check if admin session exists
+    const adminSession = sessionStorage.getItem('admin_session');
+    if (adminSession) {
+      setIsAdmin(true);
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Defer profile fetch to avoid blocking
           setTimeout(async () => {
             const authUserData = await fetchUserProfile(session.user.id);
             setAuthUser(authUserData);
@@ -96,7 +99,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // THEN get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -114,63 +116,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error: error as Error | null };
-  };
+  const loginWithNisNit = async (nisNit: string, password: string): Promise<{ error: string | null; isAdmin?: boolean }> => {
+    try {
+      // First check if it's an admin login
+      const adminRes = await supabase.functions.invoke('admin-login', {
+        body: { username: nisNit, password },
+      });
 
-  const signUp = async (email: string, password: string, fullName: string, role: UserRole, className?: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: window.location.origin,
-        data: {
-          full_name: fullName,
-          role: role,
-          class: className,
-        },
-      },
-    });
-
-    if (error) {
-      return { error: error as Error };
-    }
-
-    if (data.user) {
-      // Create profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          user_id: data.user.id,
-          full_name: fullName,
-          class: className || null,
-        });
-
-      if (profileError) {
-        console.error('Error creating profile:', profileError);
+      if (adminRes.data?.success) {
+        sessionStorage.setItem('admin_session', JSON.stringify(adminRes.data));
+        setIsAdmin(true);
+        return { error: null, isAdmin: true };
       }
 
-      // Create role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: data.user.id,
-          role: role,
+      // Try user login (student/teacher)
+      const userRes = await supabase.functions.invoke('user-login', {
+        body: { nis_nit: nisNit, password },
+      });
+
+      if (userRes.data?.error) {
+        return { error: userRes.data.error };
+      }
+
+      if (userRes.error) {
+        return { error: 'NIS/NIT atau password salah' };
+      }
+
+      if (userRes.data?.success) {
+        // Sign in with Supabase Auth
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: userRes.data.email,
+          password: password,
         });
 
-      if (roleError) {
-        console.error('Error creating role:', roleError);
-      }
-    }
+        if (signInError) {
+          return { error: 'Gagal membuat sesi login' };
+        }
 
-    return { error: null };
+        return { error: null, isAdmin: false };
+      }
+
+      return { error: 'NIS/NIT atau password salah' };
+    } catch (error: any) {
+      console.error('Login error:', error);
+      return { error: 'Terjadi kesalahan saat login' };
+    }
   };
 
   const signOut = async () => {
+    sessionStorage.removeItem('admin_session');
+    setIsAdmin(false);
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
@@ -184,8 +179,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         session,
         authUser,
         loading,
-        signIn,
-        signUp,
+        isAdmin,
+        loginWithNisNit,
         signOut,
         refreshProfile,
       }}
