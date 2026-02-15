@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Upload, CheckCircle, XCircle, RotateCcw, Shield, Loader2, ScanFace, ArrowLeft, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -62,9 +62,13 @@ const Absensi: React.FC = () => {
     checkTodayAttendance();
   }, [user]);
 
-  // Load face detection models on mount
-  useEffect(() => {
-    loadModels();
+  // Load face detection models only when needed (lazy)
+  const loadModelsOnce = useRef(false);
+  const ensureModelsLoaded = useCallback(async () => {
+    if (!loadModelsOnce.current) {
+      loadModelsOnce.current = true;
+      await loadModels();
+    }
   }, [loadModels]);
 
   // Start camera with portrait orientation
@@ -363,11 +367,10 @@ const Absensi: React.FC = () => {
               </div>
 
               <Button
-                onClick={() => {
+                onClick={async () => {
                   if (attendanceType === 'hadir') {
                     if (!isModelLoaded) {
-                      toast.error('Model deteksi wajah belum siap');
-                      return;
+                      await ensureModelsLoaded();
                     }
                     startCamera();
                   } else {
@@ -376,16 +379,8 @@ const Absensi: React.FC = () => {
                 }}
                 className="w-full"
                 size="lg"
-                disabled={attendanceType === 'hadir' && !isModelLoaded}
               >
-                {attendanceType === 'hadir' && !isModelLoaded ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Memuat Model...
-                  </>
-                ) : (
-                  'Lanjutkan'
-                )}
+                Lanjutkan
               </Button>
             </>
           )}
