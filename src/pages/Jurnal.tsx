@@ -14,7 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Class, ClassLocation, Journal } from '@/types/database';
 
 const Jurnal: React.FC = () => {
-  const { user } = useAuth();
+  const { user, authUser } = useAuth();
   const [classes, setClasses] = useState<Class[]>([]);
   const [locations, setLocations] = useState<ClassLocation[]>([]);
   const [journals, setJournals] = useState<(Journal & { class_name?: string; location_name?: string })[]>([]);
@@ -125,6 +125,7 @@ const Jurnal: React.FC = () => {
         teaching_hours: parseInt(teachingHours),
         description,
         date: new Date().toISOString().split('T')[0],
+        school_id: authUser?.school_id || '',
       });
 
       if (error) throw error;

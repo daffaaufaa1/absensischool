@@ -21,7 +21,7 @@ serve(async (req) => {
     // Try student first
     const { data: student } = await supabase
       .from("students")
-      .select("*, classes(name)")
+      .select("*, classes(name), schools(id, name, code)")
       .eq("nis", nis_nit)
       .single();
 
@@ -32,44 +32,42 @@ serve(async (req) => {
       });
 
       if (isValid) {
-        // Sign in or create Supabase auth user for session
         const email = `${nis_nit}@siswa.fadam.sch.id`;
         
-        // Try to sign in first
-        const { data: signInData, error: signInError } = await supabase.auth.admin.listUsers();
+        const { data: signInData } = await supabase.auth.admin.listUsers();
         const existingUser = signInData?.users?.find(u => u.email === email);
         
         let userId: string;
         
         if (existingUser) {
           userId = existingUser.id;
+          // Update profile school_id if needed
+          await supabase.from("profiles").update({ school_id: student.school_id }).eq("user_id", userId);
         } else {
-          // Create auth user
           const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
             email,
             password,
             email_confirm: true,
-            user_metadata: { full_name: student.full_name, role: 'siswa' },
+            user_metadata: { full_name: student.full_name, role: 'siswa', school_id: student.school_id },
           });
           if (createError) throw createError;
           userId = newUser.user.id;
 
-          // Create profile
           await supabase.from("profiles").insert({
             user_id: userId,
             full_name: student.full_name,
             class: student.classes?.name || null,
+            school_id: student.school_id,
           });
 
-          // Create role
           await supabase.from("user_roles").insert({
             user_id: userId,
             role: "siswa",
+            school_id: student.school_id,
           });
         }
 
-        // Generate session token
-        const { data: tokenData, error: tokenError } = await supabase.auth.admin.generateLink({
+        const { data: tokenData } = await supabase.auth.admin.generateLink({
           type: "magiclink",
           email,
         });
@@ -82,6 +80,8 @@ serve(async (req) => {
             user_id: userId,
             full_name: student.full_name,
             class: student.classes?.name || null,
+            school_id: student.school_id,
+            school: student.schools,
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
@@ -91,7 +91,7 @@ serve(async (req) => {
     // Try teacher
     const { data: teacher } = await supabase
       .from("teachers")
-      .select("*")
+      .select("*, schools(id, name, code)")
       .eq("nit", nis_nit)
       .single();
 
@@ -111,12 +111,13 @@ serve(async (req) => {
         
         if (existingUser) {
           userId = existingUser.id;
+          await supabase.from("profiles").update({ school_id: teacher.school_id }).eq("user_id", userId);
         } else {
           const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
             email,
             password,
             email_confirm: true,
-            user_metadata: { full_name: teacher.full_name, role: 'guru' },
+            user_metadata: { full_name: teacher.full_name, role: 'guru', school_id: teacher.school_id },
           });
           if (createError) throw createError;
           userId = newUser.user.id;
@@ -124,11 +125,13 @@ serve(async (req) => {
           await supabase.from("profiles").insert({
             user_id: userId,
             full_name: teacher.full_name,
+            school_id: teacher.school_id,
           });
 
           await supabase.from("user_roles").insert({
             user_id: userId,
             role: "guru",
+            school_id: teacher.school_id,
           });
         }
 
@@ -139,6 +142,8 @@ serve(async (req) => {
             email,
             user_id: userId,
             full_name: teacher.full_name,
+            school_id: teacher.school_id,
+            school: teacher.schools,
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
