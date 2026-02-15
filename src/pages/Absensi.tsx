@@ -178,6 +178,7 @@ const Absensi: React.FC = () => {
         notes: notes || null,
         photo_url: photo || null,
         permit_file_url: null as string | null,
+        school_id: authUser?.school_id || '',
       };
 
       // If permit file, upload it

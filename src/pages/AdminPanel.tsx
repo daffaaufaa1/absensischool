@@ -34,7 +34,7 @@ interface ClassItem {
 }
 
 const AdminPanel: React.FC = () => {
-  const { isAdmin, signOut } = useAuth();
+  const { isAdmin, signOut, schoolId } = useAuth();
   const navigate = useNavigate();
   const [students, setStudents] = useState<Student[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -66,9 +66,9 @@ const AdminPanel: React.FC = () => {
     setLoading(true);
     try {
       const [studentsRes, teachersRes, classesRes] = await Promise.all([
-        supabase.functions.invoke('admin-students', { method: 'GET' }),
-        supabase.functions.invoke('admin-teachers', { method: 'GET' }),
-        supabase.from('classes').select('*').order('name'),
+        supabase.functions.invoke('admin-students', { method: 'GET', headers: { 'x-school-id': schoolId || '' } }),
+        supabase.functions.invoke('admin-teachers', { method: 'GET', headers: { 'x-school-id': schoolId || '' } }),
+        supabase.from('classes').select('*').eq('school_id', schoolId || '').order('name'),
       ]);
 
       if (studentsRes.data) setStudents(studentsRes.data);
@@ -103,7 +103,7 @@ const AdminPanel: React.FC = () => {
       } else {
         const { data, error } = await supabase.functions.invoke('admin-students', {
           method: 'POST',
-          body: studentForm,
+          body: { ...studentForm, school_id: schoolId },
         });
         if (error || data?.error) throw new Error(data?.error || 'Gagal menambah siswa');
         toast.success('Siswa berhasil ditambahkan');
@@ -160,7 +160,7 @@ const AdminPanel: React.FC = () => {
       } else {
         const { data, error } = await supabase.functions.invoke('admin-teachers', {
           method: 'POST',
-          body: teacherForm,
+          body: { ...teacherForm, school_id: schoolId },
         });
         if (error || data?.error) throw new Error(data?.error || 'Gagal menambah guru');
         toast.success('Guru berhasil ditambahkan');

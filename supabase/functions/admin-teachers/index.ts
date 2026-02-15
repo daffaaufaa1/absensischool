@@ -16,12 +16,20 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    const url = new URL(req.url);
+    let school_id = url.searchParams.get("school_id");
+
     if (req.method === "GET") {
-      const { data, error } = await supabase
+      let query = supabase
         .from("teachers")
         .select("*")
         .order("full_name", { ascending: true });
 
+      if (school_id) {
+        query = query.eq("school_id", school_id);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return new Response(JSON.stringify(data), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -29,17 +37,26 @@ serve(async (req) => {
     }
 
     if (req.method === "POST") {
-      const { nit, full_name, subject, password } = await req.json();
+      const { nit, full_name, subject, password, school_id: bodySchoolId } = await req.json();
+      const sid = bodySchoolId || school_id;
 
-      // Check duplicate NIT
+      if (!sid) {
+        return new Response(
+          JSON.stringify({ error: "school_id diperlukan" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Check duplicate NIT within school
       const { data: existing } = await supabase
         .from("teachers")
         .select("id")
         .eq("nit", nit)
+        .eq("school_id", sid)
         .single();
       if (existing) {
         return new Response(
-          JSON.stringify({ error: "NIT sudah terdaftar" }),
+          JSON.stringify({ error: "NIT sudah terdaftar di sekolah ini" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -48,7 +65,7 @@ serve(async (req) => {
 
       const { data, error } = await supabase
         .from("teachers")
-        .insert({ nit, full_name, subject, password_hash: hashedPw })
+        .insert({ nit, full_name, subject, password_hash: hashedPw, school_id: sid })
         .select()
         .single();
 

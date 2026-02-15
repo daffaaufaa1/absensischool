@@ -9,7 +9,10 @@ interface AuthContextType {
   authUser: AuthUser | null;
   loading: boolean;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
+  schoolId: string | null;
   loginWithNisNit: (nisNit: string, password: string) => Promise<{ error: string | null; isAdmin?: boolean }>;
+  loginAsSuperAdmin: (username: string, password: string) => Promise<{ error: string | null; success?: boolean }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -30,6 +33,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [schoolId, setSchoolId] = useState<string | null>(null);
 
   const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
     try {
@@ -54,12 +59,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const { data: userData } = await supabase.auth.getUser();
+
+      if (profile?.school_id) {
+        setSchoolId(profile.school_id);
+      }
       
       return {
         id: userId,
         email: userData?.user?.email || '',
         profile: profile as UserProfile | null,
         role: (roleData?.role as UserRole) || null,
+        school_id: profile?.school_id || null,
       };
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
@@ -78,7 +88,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check if admin session exists
     const adminSession = sessionStorage.getItem('admin_session');
     if (adminSession) {
+      const parsed = JSON.parse(adminSession);
       setIsAdmin(true);
+      setSchoolId(parsed.school_id || null);
+    }
+
+    const superAdminSession = sessionStorage.getItem('super_admin_session');
+    if (superAdminSession) {
+      setIsSuperAdmin(true);
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -126,6 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (adminRes.data?.success) {
         sessionStorage.setItem('admin_session', JSON.stringify(adminRes.data));
         setIsAdmin(true);
+        setSchoolId(adminRes.data.school_id || null);
         return { error: null, isAdmin: true };
       }
 
@@ -152,6 +170,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return { error: 'Gagal membuat sesi login' };
         }
 
+        setSchoolId(userRes.data.school_id || null);
         return { error: null, isAdmin: false };
       }
 
@@ -162,9 +181,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loginAsSuperAdmin = async (username: string, password: string): Promise<{ error: string | null; success?: boolean }> => {
+    try {
+      const res = await supabase.functions.invoke('super-admin', {
+        body: { username, password },
+        headers: { 'x-action': 'login' },
+      });
+
+      // Use query param approach
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/super-admin?action=login`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ username, password }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data?.success) {
+        sessionStorage.setItem('super_admin_session', JSON.stringify(data));
+        setIsSuperAdmin(true);
+        return { error: null, success: true };
+      }
+
+      return { error: 'Username atau password salah' };
+    } catch (error: any) {
+      console.error('Super admin login error:', error);
+      return { error: 'Terjadi kesalahan saat login' };
+    }
+  };
+
   const signOut = async () => {
     sessionStorage.removeItem('admin_session');
+    sessionStorage.removeItem('super_admin_session');
     setIsAdmin(false);
+    setIsSuperAdmin(false);
+    setSchoolId(null);
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
@@ -179,7 +237,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         authUser,
         loading,
         isAdmin,
+        isSuperAdmin,
+        schoolId,
         loginWithNisNit,
+        loginAsSuperAdmin,
         signOut,
         refreshProfile,
       }}

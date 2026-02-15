@@ -21,7 +21,7 @@ serve(async (req) => {
     // Check admin_users table
     const { data: admin, error: adminError } = await supabase
       .from("admin_users")
-      .select("*")
+      .select("*, schools(id, name, code)")
       .eq("username", username)
       .single();
 
@@ -32,7 +32,7 @@ serve(async (req) => {
       );
     }
 
-    // Verify password using database function
+    // Verify password
     const { data: isValid } = await supabase.rpc("verify_password", {
       input_password: password,
       stored_hash: admin.password_hash,
@@ -46,7 +46,13 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, admin_id: admin.id, username: admin.username }),
+      JSON.stringify({
+        success: true,
+        admin_id: admin.id,
+        username: admin.username,
+        school_id: admin.school_id,
+        school: admin.schools,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {

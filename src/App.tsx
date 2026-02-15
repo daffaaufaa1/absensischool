@@ -19,6 +19,7 @@ const Kehadiran = lazy(() => import("@/pages/Kehadiran"));
 const Biodata = lazy(() => import("@/pages/Biodata"));
 const PengurusAccess = lazy(() => import("@/pages/PengurusAccess"));
 const AdminPanel = lazy(() => import("@/pages/AdminPanel"));
+const SuperAdminPanel = lazy(() => import("@/pages/SuperAdminPanel"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const App = () => (
 
                 {/* Admin route */}
                 <Route path="/admin" element={<AdminPanel />} />
+                <Route path="/super-admin" element={<SuperAdminPanel />} />
 
                 {/* Protected routes with layout */}
                 <Route

@@ -18,7 +18,7 @@ interface PengurusWithDetails extends PengurusKelasAccess {
 }
 
 const PengurusAccess: React.FC = () => {
-  const { user } = useAuth();
+  const { user, authUser } = useAuth();
   const [classes, setClasses] = useState<Class[]>([]);
   const [students, setStudents] = useState<(UserProfile & { user_id: string })[]>([]);
   const [pengurusList, setPengurusList] = useState<PengurusWithDetails[]>([]);
@@ -141,7 +141,8 @@ const PengurusAccess: React.FC = () => {
       // Grant pengurus role
       const { error: roleError } = await supabase.from('user_roles').upsert({
         user_id: selectedStudent,
-        role: 'pengurus_kelas',
+        role: 'pengurus_kelas' as const,
+        school_id: authUser?.school_id || '',
       });
 
       if (roleError && roleError.code !== '23505') throw roleError;
@@ -151,6 +152,7 @@ const PengurusAccess: React.FC = () => {
         student_id: selectedStudent,
         class_id: selectedClass,
         granted_by: user.id,
+        school_id: authUser?.school_id || '',
       });
 
       if (error) throw error;
