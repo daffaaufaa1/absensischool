@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-school-id, x-action",
 };
 
 serve(async (req) => {
@@ -16,9 +16,61 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Get school_id from query param or body
     const url = new URL(req.url);
-    let school_id = url.searchParams.get("school_id");
+    let school_id = url.searchParams.get("school_id") || req.headers.get("x-school-id");
+    const action = req.headers.get("x-action");
+
+    // Class management actions
+    if (action === "add-class") {
+      const { name, school_id: bodySchoolId } = await req.json();
+      const sid = bodySchoolId || school_id;
+      if (!sid || !name) {
+        return new Response(
+          JSON.stringify({ error: "Nama kelas dan school_id diperlukan" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Check duplicate
+      const { data: existing } = await supabase
+        .from("classes")
+        .select("id")
+        .eq("name", name)
+        .eq("school_id", sid)
+        .single();
+      if (existing) {
+        return new Response(
+          JSON.stringify({ error: "Nama kelas sudah ada" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const { data, error } = await supabase
+        .from("classes")
+        .insert({ name, school_id: sid })
+        .select()
+        .single();
+      if (error) throw error;
+      return new Response(JSON.stringify(data), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "delete-class") {
+      const { id } = await req.json();
+      // Nullify students' class_id
+      await supabase.from("students").update({ class_id: null }).eq("class_id", id);
+      // Delete journals referencing this class
+      await supabase.from("journals").delete().eq("class_id", id);
+      // Delete pengurus_kelas_access
+      await supabase.from("pengurus_kelas_access").delete().eq("class_id", id);
+      // Delete the class
+      const { error } = await supabase.from("classes").delete().eq("id", id);
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (req.method === "GET") {
       let query = supabase
@@ -48,7 +100,6 @@ serve(async (req) => {
         );
       }
 
-      // Check max 35 students per class
       if (class_id) {
         const { count } = await supabase
           .from("students")
@@ -62,7 +113,6 @@ serve(async (req) => {
         }
       }
 
-      // Check duplicate NIS within school
       const { data: existing } = await supabase
         .from("students")
         .select("id")
@@ -92,7 +142,6 @@ serve(async (req) => {
 
     if (req.method === "PUT") {
       const { id, nis, full_name, class_id, password } = await req.json();
-
       const updates: Record<string, unknown> = { nis, full_name, class_id };
 
       if (password) {

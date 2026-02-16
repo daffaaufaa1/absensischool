@@ -30,13 +30,17 @@ const Login: React.FC = () => {
 
     setLoading(true);
 
-    const { error, isAdmin } = await loginWithNisNit(nisNit.trim(), password);
+    const { error, isAdmin, isSuperAdmin } = await loginWithNisNit(nisNit.trim(), password);
 
     if (error) {
       toast.error(error);
     } else {
       toast.success('Login berhasil!');
-      navigate(isAdmin ? '/admin' : '/dashboard');
+      if (isSuperAdmin) {
+        navigate('/super-admin');
+      } else {
+        navigate(isAdmin ? '/admin' : '/dashboard');
+      }
     }
 
     setLoading(false);

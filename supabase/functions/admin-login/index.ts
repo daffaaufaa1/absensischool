@@ -21,7 +21,7 @@ serve(async (req) => {
     // Check admin_users table
     const { data: admin, error: adminError } = await supabase
       .from("admin_users")
-      .select("*, schools(id, name, code)")
+      .select("*, schools(id, name, code, is_active)")
       .eq("username", username)
       .single();
 
@@ -42,6 +42,14 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Invalid credentials" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check if school is active
+    if (admin.schools && !admin.schools.is_active) {
+      return new Response(
+        JSON.stringify({ error: "Sekolah Anda sedang nonaktif. Hubungi Super Admin." }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 

@@ -66,16 +66,35 @@ serve(async (req) => {
       });
     }
 
+    // School detail
+    if (action === "school-detail") {
+      const schoolId = url.searchParams.get("school_id");
+      if (!schoolId) throw new Error("school_id required");
+
+      const [schoolRes, adminRes, studentRes, teacherRes, classRes] = await Promise.all([
+        supabase.from("schools").select("*").eq("id", schoolId).single(),
+        supabase.from("admin_users").select("username").eq("school_id", schoolId).single(),
+        supabase.from("students").select("id", { count: "exact", head: true }).eq("school_id", schoolId),
+        supabase.from("teachers").select("id", { count: "exact", head: true }).eq("school_id", schoolId),
+        supabase.from("classes").select("id", { count: "exact", head: true }).eq("school_id", schoolId),
+      ]);
+
+      return new Response(JSON.stringify({
+        school: schoolRes.data,
+        admin_username: adminRes.data?.username || '-',
+        student_count: studentRes.count || 0,
+        teacher_count: teacherRes.count || 0,
+        class_count: classRes.count || 0,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Create school
     if (action === "create-school") {
       const { name, code, address, admin_username, admin_password } = await req.json();
 
-      // Check duplicate code
-      const { data: existing } = await supabase
-        .from("schools")
-        .select("id")
-        .eq("code", code)
-        .single();
+      const { data: existing } = await supabase.from("schools").select("id").eq("code", code).single();
       if (existing) {
         return new Response(
           JSON.stringify({ error: "Kode sekolah sudah digunakan" }),
@@ -83,26 +102,17 @@ serve(async (req) => {
         );
       }
 
-      // Create school
       const { data: school, error: schoolError } = await supabase
         .from("schools")
         .insert({ name, code, address })
         .select()
         .single();
-
       if (schoolError) throw schoolError;
 
-      // Create school admin
       const { data: hashedPw } = await supabase.rpc("hash_password", { password: admin_password });
-
       const { error: adminError } = await supabase
         .from("admin_users")
-        .insert({
-          username: admin_username,
-          password_hash: hashedPw,
-          school_id: school.id,
-        });
-
+        .insert({ username: admin_username, password_hash: hashedPw, school_id: school.id });
       if (adminError) throw adminError;
 
       return new Response(
@@ -111,17 +121,15 @@ serve(async (req) => {
       );
     }
 
-    // Update school
+    // Update school (toggle status)
     if (action === "update-school") {
       const { id, name, code, address, is_active } = await req.json();
-
       const { data, error } = await supabase
         .from("schools")
         .update({ name, code, address, is_active })
         .eq("id", id)
         .select()
         .single();
-
       if (error) throw error;
       return new Response(JSON.stringify(data), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -131,6 +139,19 @@ serve(async (req) => {
     // Delete school
     if (action === "delete-school") {
       const { id } = await req.json();
+      
+      // Delete related data first
+      await supabase.from("pengurus_kelas_access").delete().eq("school_id", id);
+      await supabase.from("grades").delete().eq("school_id", id);
+      await supabase.from("journals").delete().eq("school_id", id);
+      await supabase.from("attendance").delete().eq("school_id", id);
+      await supabase.from("students").delete().eq("school_id", id);
+      await supabase.from("teachers").delete().eq("school_id", id);
+      await supabase.from("subjects").delete().eq("school_id", id);
+      await supabase.from("class_locations").delete().eq("school_id", id);
+      await supabase.from("classes").delete().eq("school_id", id);
+      await supabase.from("admin_users").delete().eq("school_id", id);
+      
       const { error } = await supabase.from("schools").delete().eq("id", id);
       if (error) throw error;
       return new Response(JSON.stringify({ success: true }), {

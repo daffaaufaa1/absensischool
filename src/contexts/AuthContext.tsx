@@ -11,8 +11,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isSuperAdmin: boolean;
   schoolId: string | null;
-  loginWithNisNit: (nisNit: string, password: string) => Promise<{ error: string | null; isAdmin?: boolean }>;
-  loginAsSuperAdmin: (username: string, password: string) => Promise<{ error: string | null; success?: boolean }>;
+  loginWithNisNit: (nisNit: string, password: string) => Promise<{ error: string | null; isAdmin?: boolean; isSuperAdmin?: boolean }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -85,7 +84,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Check if admin session exists
     const adminSession = sessionStorage.getItem('admin_session');
     if (adminSession) {
       const parsed = JSON.parse(adminSession);
@@ -133,21 +131,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const loginWithNisNit = async (nisNit: string, password: string): Promise<{ error: string | null; isAdmin?: boolean }> => {
+  const loginWithNisNit = async (nisNit: string, password: string): Promise<{ error: string | null; isAdmin?: boolean; isSuperAdmin?: boolean }> => {
     try {
-      // First check if it's an admin login (401 is expected for non-admin users)
+      // 1. Check super admin first (username: 010101)
+      const superAdminRes = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/super-admin?action=login`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ username: nisNit, password }),
+        }
+      );
+      const superAdminData = await superAdminRes.json();
+
+      if (superAdminData?.success) {
+        sessionStorage.setItem('super_admin_session', JSON.stringify(superAdminData));
+        setIsSuperAdmin(true);
+        return { error: null, isSuperAdmin: true };
+      }
+
+      // 2. Check admin login
       const adminRes = await supabase.functions.invoke('admin-login', {
         body: { username: nisNit, password },
       });
 
       if (adminRes.data?.success) {
+        // Check if school is active
+        if (adminRes.data.school && adminRes.data.school.is_active === false) {
+          return { error: 'Sekolah Anda sedang nonaktif. Hubungi Super Admin.' };
+        }
         sessionStorage.setItem('admin_session', JSON.stringify(adminRes.data));
         setIsAdmin(true);
         setSchoolId(adminRes.data.school_id || null);
         return { error: null, isAdmin: true };
       }
 
-      // Try user login (student/teacher)
+      // 3. Try user login (student/teacher)
       const userRes = await supabase.functions.invoke('user-login', {
         body: { nis_nit: nisNit, password },
       });
@@ -161,6 +184,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (userRes.data?.success) {
+        // Check if school is active
+        if (userRes.data.school && userRes.data.school.is_active === false) {
+          return { error: 'Sekolah Anda sedang nonaktif. Hubungi Admin.' };
+        }
+
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email: userRes.data.email,
           password: password,
@@ -177,42 +205,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { error: 'NIS/NIT atau password salah' };
     } catch (error: any) {
       console.error('Login error:', error);
-      return { error: 'Terjadi kesalahan saat login' };
-    }
-  };
-
-  const loginAsSuperAdmin = async (username: string, password: string): Promise<{ error: string | null; success?: boolean }> => {
-    try {
-      const res = await supabase.functions.invoke('super-admin', {
-        body: { username, password },
-        headers: { 'x-action': 'login' },
-      });
-
-      // Use query param approach
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/super-admin?action=login`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({ username, password }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (data?.success) {
-        sessionStorage.setItem('super_admin_session', JSON.stringify(data));
-        setIsSuperAdmin(true);
-        return { error: null, success: true };
-      }
-
-      return { error: 'Username atau password salah' };
-    } catch (error: any) {
-      console.error('Super admin login error:', error);
       return { error: 'Terjadi kesalahan saat login' };
     }
   };
@@ -240,7 +232,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isSuperAdmin,
         schoolId,
         loginWithNisNit,
-        loginAsSuperAdmin,
         signOut,
         refreshProfile,
       }}

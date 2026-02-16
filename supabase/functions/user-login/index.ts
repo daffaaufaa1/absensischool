@@ -21,11 +21,19 @@ serve(async (req) => {
     // Try student first
     const { data: student } = await supabase
       .from("students")
-      .select("*, classes(name), schools(id, name, code)")
+      .select("*, classes(name), schools(id, name, code, is_active)")
       .eq("nis", nis_nit)
       .single();
 
     if (student) {
+      // Check school active status
+      if (student.schools && !student.schools.is_active) {
+        return new Response(
+          JSON.stringify({ error: "Sekolah Anda sedang nonaktif. Hubungi Admin." }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       const { data: isValid } = await supabase.rpc("verify_password", {
         input_password: password,
         stored_hash: student.password_hash,
@@ -41,7 +49,6 @@ serve(async (req) => {
         
         if (existingUser) {
           userId = existingUser.id;
-          // Update profile school_id if needed
           await supabase.from("profiles").update({ school_id: student.school_id }).eq("user_id", userId);
         } else {
           const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
@@ -67,11 +74,6 @@ serve(async (req) => {
           });
         }
 
-        const { data: tokenData } = await supabase.auth.admin.generateLink({
-          type: "magiclink",
-          email,
-        });
-
         return new Response(
           JSON.stringify({
             success: true,
@@ -91,11 +93,19 @@ serve(async (req) => {
     // Try teacher
     const { data: teacher } = await supabase
       .from("teachers")
-      .select("*, schools(id, name, code)")
+      .select("*, schools(id, name, code, is_active)")
       .eq("nit", nis_nit)
       .single();
 
     if (teacher) {
+      // Check school active status
+      if (teacher.schools && !teacher.schools.is_active) {
+        return new Response(
+          JSON.stringify({ error: "Sekolah Anda sedang nonaktif. Hubungi Admin." }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       const { data: isValid } = await supabase.rpc("verify_password", {
         input_password: password,
         stored_hash: teacher.password_hash,
