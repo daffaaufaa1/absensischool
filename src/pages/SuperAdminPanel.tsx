@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, LogOut, School, Eye, EyeOff, Lock, User } from 'lucide-react';
+import { Plus, Pencil, Trash2, LogOut, School, Eye, EyeOff, Lock, User, ArrowRight } from 'lucide-react';
 
 interface SchoolItem {
   id: string;
@@ -110,7 +110,7 @@ const SuperAdminPanel: React.FC = () => {
     navigate('/login');
   };
 
-  // Login screen for super admin
+  // Login screen for super admin - same style as main login
   if (!isSuperAdmin) {
     return (
       <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
@@ -121,19 +121,30 @@ const SuperAdminPanel: React.FC = () => {
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[200%] h-28 bg-background rounded-t-[100%]" />
           </div>
           <div className="relative z-10 flex flex-col items-center text-center px-4">
-            <div className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center shadow-xl mb-4">
-              <School className="w-10 h-10 text-primary-foreground" />
+            <div className="relative mb-4">
+              <div className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center shadow-xl">
+                <div className="w-16 h-16 rounded-xl bg-primary-foreground flex items-center justify-center">
+                  <span className="text-primary font-black text-2xl tracking-tighter">FA</span>
+                </div>
+              </div>
             </div>
-            <h1 className="text-2xl font-bold text-primary-foreground tracking-tight mb-0.5">Super Admin</h1>
-            <p className="text-primary-foreground/60 text-sm">Manajemen Platform Sekolah</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-primary-foreground tracking-tight mb-0.5">
+              FADAM SCHOOL
+            </h1>
+            <p className="text-primary-foreground/60 text-sm">Super Admin Panel</p>
           </div>
         </div>
 
         <div className="flex-1 flex flex-col px-6 pt-2 pb-8 -mt-8 relative z-20">
           <div className="max-w-sm mx-auto w-full">
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-bold text-foreground">Login Super Admin</h2>
+              <p className="text-muted-foreground text-sm mt-1">Masuk untuk mengelola platform</p>
+            </div>
+
             <form onSubmit={handleLogin} className="space-y-5">
               <div className="space-y-2">
-                <Label>Username</Label>
+                <Label htmlFor="sa-username" className="text-sm font-medium">Username</Label>
                 <div className="relative">
                   <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center">
                     <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
@@ -141,15 +152,17 @@ const SuperAdminPanel: React.FC = () => {
                     </div>
                   </div>
                   <Input
-                    placeholder="Username super admin"
+                    id="sa-username"
+                    placeholder="Masukkan username"
                     value={loginForm.username}
                     onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
                     className="pl-14 h-12 text-base rounded-xl"
+                    required
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Password</Label>
+                <Label htmlFor="sa-password" className="text-sm font-medium">Password</Label>
                 <div className="relative">
                   <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center">
                     <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
@@ -157,11 +170,13 @@ const SuperAdminPanel: React.FC = () => {
                     </div>
                   </div>
                   <Input
+                    id="sa-password"
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="Password"
+                    placeholder="Masukkan password"
                     value={loginForm.password}
                     onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                     className="pl-14 pr-12 h-12 text-base rounded-xl"
+                    required
                   />
                   <button
                     type="button"
@@ -172,10 +187,30 @@ const SuperAdminPanel: React.FC = () => {
                   </button>
                 </div>
               </div>
-              <Button type="submit" className="w-full h-12 text-base font-semibold rounded-xl" disabled={loginLoading}>
-                {loginLoading ? 'Memproses...' : 'Masuk'}
+              <Button
+                type="submit"
+                className="w-full h-12 text-base font-semibold rounded-xl shadow-lg transition-all duration-200 group"
+                disabled={loginLoading}
+              >
+                {loginLoading ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Memproses...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    Masuk
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                )}
               </Button>
             </form>
+          </div>
+
+          <div className="mt-auto pt-6">
+            <p className="text-center text-xs text-muted-foreground">
+              © 2024 FADAM School
+            </p>
           </div>
         </div>
       </div>
